@@ -28,6 +28,7 @@ struct DetailView: View {
                     
                     Text(park.title)
                         .font(.title)
+                        .foregroundStyle(Color("PrimaryBlue"))
                         .padding()
                     
                     HStack {
@@ -35,6 +36,7 @@ struct DetailView: View {
                         
                         Text(park.author)
                             .font(.headline)
+                            .fontWeight(.bold)
                             .foregroundStyle(.secondary)
                             
                         
@@ -42,12 +44,14 @@ struct DetailView: View {
                         
                         Text(park.genre)
                             .font(.headline)
+                            .fontWeight(.bold)
                             .foregroundStyle(.secondary)
                         
                         Spacer()
                         
                         Text(park.yearPublished)
                             .font(.headline)
+                            .fontWeight(.bold)
                             .foregroundStyle(.secondary)
                         
                         Spacer()
@@ -58,25 +62,10 @@ struct DetailView: View {
                         .padding()
                     
                     
-                    /*Button {
-                        park.isFavorite.toggle()
+                    Button { // Search similar button
+                        dismiss() // Currently only dismisses but when we integrate the API it'll search for similar books and take the user to CatalogGridView
                     } label: {
-                        Text(park.isFavorite ? "Remove from Favorites" : "Add to Favorites") // Toggles text depending on if it's favorited or not
-                            .font(.subheadline)
-                            .fontWeight(.bold)
-                            .foregroundStyle(.white)
-                            .padding(.horizontal)
-                            .padding(.vertical, 8)
-                    }
-                    .background(Capsule(style: .continuous))
-                    .foregroundStyle(Color("SecondaryBlue"))
-                    .padding(.horizontal)
-                    .padding(.bottom, 1)*/
-                    
-                    Button { // Custom back button
-                        dismiss()
-                    } label: {
-                        Text("Search Similar") // Toggles text depending on if it's favorited or not
+                        Text("Search Similar")
                             .font(.subheadline)
                             .fontWeight(.bold)
                             .foregroundStyle(.white)
@@ -104,7 +93,7 @@ struct DetailView: View {
                     }
                     
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button { // Custom back button
+                        Button { // Favorite button
                             park.isFavorite.toggle()
                         } label: {
                             Image(systemName: park.isFavorite ? "heart.fill" : "heart")

@@ -10,7 +10,7 @@ import SwiftUI
 import SwiftData
 
 @Model
-final class BookItem {
+final class BookItem { // Class to hold our book data
     var id: Int
         var title: String
         var author: String

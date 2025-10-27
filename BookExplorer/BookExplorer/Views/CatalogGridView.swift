@@ -59,9 +59,7 @@ struct CatalogGridView: View {
                                         .foregroundStyle(Color("PrimaryBlue"))
                                     
                                     HStack {
-                                        
-                                        //Spacer()
-                                        
+                                                                                
                                         Text("\(park.author)")
                                             .font(.subheadline)
                                             .foregroundStyle(Color("PrimaryBlue"))
