@@ -27,6 +27,10 @@ struct ContentView: View {
                 FavoritesView()
             }
             
+            Tab("Stats", systemImage: "chart.xyaxis.line"){
+                StatsView()
+            }
+            
         }
             
     }
