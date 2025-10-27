@@ -9,14 +9,14 @@ import SwiftUI
 
 // MARK: Pie chart View
 struct PieChartView: View {
-    let data: [GenreStat]
+    let data: [CategoryStat]
 
     var body: some View {
         GeometryReader { geo in
             let total = data.map(\.value).reduce(0, +)
             // Precompute cumulative slices (no mutation inside ViewBuilder)
-            let slices: [(item: GenreStat, start: Double, end: Double)] = {
-                var result: [(GenreStat, Double, Double)] = []
+            let slices: [(item: CategoryStat, start: Double, end: Double)] = {
+                var result: [(CategoryStat, Double, Double)] = []
                 var runningEnd: Double = 0
                 for item in data {
                     let frac = total > 0 ? item.value / total : 0

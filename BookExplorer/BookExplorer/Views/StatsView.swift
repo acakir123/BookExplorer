@@ -15,13 +15,21 @@ struct StatsView: View {
             GridItem(.flexible(), spacing: 12)
         ]
     
-    // Placeholder genre data
-    private let placeholderGenres: [GenreStat] = [
-        .init(name: "Fantasy",    value: 30, color: Color("Pie1")),
-        .init(name: "Sci-Fi",     value: 25, color: Color("Pie2")),
-        .init(name: "Mystery",    value: 20, color: Color("Pie3")),
-        .init(name: "Non-fiction",value: 15, color: Color("Pie4")),
-        .init(name: "Romance",    value: 10, color: Color("Pie5"))
+    // MARK: Placeholder data
+    private let placeholderGenres: [CategoryStat] = [
+        .init(name: "Fantasy",    value: 30, color: Color("Graph1")),
+        .init(name: "Sci-Fi",     value: 25, color: Color("Graph2")),
+        .init(name: "Mystery",    value: 20, color: Color("Graph3")),
+        .init(name: "Non-fiction",value: 15, color: Color("Graph4")),
+        .init(name: "Romance",    value: 10, color: Color("Graph5"))
+    ]
+    
+    private let placeholderDecades: [CategoryStat] = [
+        .init(name: "1980s", value: 10, color: Color("Graph1")),
+        .init(name: "1990s", value: 18, color: Color("Graph2")),
+        .init(name: "2000s", value: 22, color: Color("Graph3")),
+        .init(name: "2010s", value: 30, color: Color("Graph4")),
+        .init(name: "2020s", value: 20, color: Color("Graph5"))
     ]
     
     var body: some View {
@@ -68,6 +76,17 @@ struct StatsView: View {
                 .padding()
                 .background(Color("SecondaryBackground"))
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                
+                // MARK: Decade breakdown
+                Text("Decade breakdown")
+                    .font(.title3.weight(.semibold))
+                    .padding(.top, 8)
+
+                StackedBarChartView(data: placeholderDecades)
+                    .frame(height: 70) // bar + labels total height
+                    .padding()
+                    .background(Color("SecondaryBackground"))
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .padding(16)
         }
