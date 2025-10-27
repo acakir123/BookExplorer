@@ -7,12 +7,22 @@
 
 import SwiftUI
 
+// MARK: Stats View
 struct StatsView: View {
     // Columns for the 2x2 card grid
     private let columns = [
             GridItem(.flexible(), spacing: 12),
             GridItem(.flexible(), spacing: 12)
         ]
+    
+    // Placeholder genre data
+    private let placeholderGenres: [GenreStat] = [
+        .init(name: "Fantasy",    value: 30, color: Color("Pie1")),
+        .init(name: "Sci-Fi",     value: 25, color: Color("Pie2")),
+        .init(name: "Mystery",    value: 20, color: Color("Pie3")),
+        .init(name: "Non-fiction",value: 15, color: Color("Pie4")),
+        .init(name: "Romance",    value: 10, color: Color("Pie5"))
+    ]
     
     var body: some View {
         ScrollView {
@@ -34,6 +44,30 @@ struct StatsView: View {
                     StatCard(title: "Avg decade", text: "2010s")
                     StatCard(title: "Avg author", text: "JK Rowling")
                 }
+                
+                // MARK: Genre Breakdown
+                Text("Genre breakdown")
+                    .font(.title3.weight(.semibold))
+                    .padding(.top, 8)
+                
+                HStack(alignment: .center, spacing: 16) {
+                    // Pie chart
+                    PieChartView(data: placeholderGenres)
+                        .frame(width: 180, height: 180)
+                        .accessibilityLabel("Genre breakdown pie chart")
+                    
+                    // Chart legend
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(placeholderGenres) { stat in
+                            LegendRow(color: stat.color, text: stat.name, percent: stat.percentString(in: placeholderGenres))
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding()
+                .background(Color("SecondaryBackground"))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .padding(16)
         }
@@ -41,7 +75,8 @@ struct StatsView: View {
     }
 }
 
-private struct StatCard: View {
+// MARK: Stat Card
+struct StatCard: View {
     let title: String
     let text: String
     
@@ -55,16 +90,16 @@ private struct StatCard: View {
                 )
             
             VStack(spacing: 6) {
-                // “Top-centered” title with a touch of top padding
                 Text(title)
                     .font(.headline)
+                    .foregroundStyle(Color("PrimaryBlue"))
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 12)
                 
                 Text(text)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(.headline)
+                    .foregroundStyle(Color(.black))
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                 
@@ -76,3 +111,4 @@ private struct StatCard: View {
         .frame(height: 140)
     }
 }
+
