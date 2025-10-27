@@ -1,6 +1,6 @@
 //
 //  CatalogGridView.swift
-//  NationalParksCatalog
+//  BookExplorer
 //
 //  Created by Ahmet Cakir on 9/19/25.
 //
@@ -10,18 +10,18 @@ import SwiftData
 
 struct CatalogGridView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var parks: [BookItem]
+    @Query private var books: [BookItem]
     
     @State private var path = [BookItem]()
     
-    // State variable for searching parks
+    // State variable for searching books
     @State private var searchText = ""
     
-    private var filteredParks: [BookItem] {
+    private var filteredBooks: [BookItem] {
         guard !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return parks // If empty return the normal list of parks
+            return books // If empty return the normal list of books
         }
-        return parks.filter { // filter parks using title and subtitle
+        return books.filter { // filter books using title and subtitle
             $0.title.localizedCaseInsensitiveContains(searchText) ||
             $0.author.localizedCaseInsensitiveContains(searchText)
         }
@@ -40,11 +40,11 @@ struct CatalogGridView: View {
                 
                 ScrollView {
                     LazyVGrid(columns: layout){
-                        ForEach(filteredParks) { park in
-                            NavigationLink(value: park){
+                        ForEach(filteredBooks) { book in
+                            NavigationLink(value: book){
                                 VStack (alignment: .leading){
                                     
-                                    Image(park.coverImage)
+                                    Image(book.coverImage)
                                         .resizable()
                                         .scaledToFill()
                                         .frame(width: 165, height: 200)
@@ -52,7 +52,7 @@ struct CatalogGridView: View {
                                         .clipShape(RoundedRectangle(cornerRadius: 8))
                                     
                                     
-                                    Text("\(park.title)")
+                                    Text("\(book.title)")
                                         .font(.title3)
                                         .fontWeight(.bold)
                                         .padding(.vertical, 3)
@@ -60,7 +60,7 @@ struct CatalogGridView: View {
                                     
                                     HStack {
                                                                                 
-                                        Text("\(park.author)")
+                                        Text("\(book.author)")
                                             .font(.subheadline)
                                             .foregroundStyle(Color("PrimaryBlue"))
                                         
@@ -68,10 +68,10 @@ struct CatalogGridView: View {
                                         
                                         Button {
                                             withAnimation {
-                                                park.isFavorite.toggle()
+                                                book.isFavorite.toggle()
                                             }
                                         } label: {
-                                            Image(systemName: park.isFavorite ? "heart.fill" : "heart")
+                                            Image(systemName: book.isFavorite ? "heart.fill" : "heart")
                                                 .foregroundStyle(Color("PrimaryBlue"))
                                         }
                                         .padding(.horizontal)
@@ -80,13 +80,13 @@ struct CatalogGridView: View {
                                     .padding(.bottom, 1)
                                     
                                     HStack {
-                                        Text(park.genre)
+                                        Text(book.genre)
                                             .font(.caption)
                                             .foregroundStyle(Color("PrimaryBlue"))
                                         
                                         Spacer()
                                         
-                                        Text(park.yearPublished)
+                                        Text(book.yearPublished)
                                             .font(.caption)
                                             .foregroundStyle(Color("PrimaryBlue"))
                                     }
@@ -110,8 +110,8 @@ struct CatalogGridView: View {
                     Color.clear.frame(height: 92) // tab bar height + a little extra
                 }
                 .navigationTitle("Featured Books")
-                .navigationDestination(for: BookItem.self) { park in
-                    DetailView(park: park)
+                .navigationDestination(for: BookItem.self) { book in
+                    DetailView(book: book)
                 }
             }
         }

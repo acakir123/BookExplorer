@@ -1,6 +1,6 @@
 //
 //  FavoritesView.swift
-//  NationalParksCatalog
+//  BookExplorer
 //
 //  Created by Ahmet Cakir on 9/20/25.
 //
@@ -49,7 +49,7 @@ struct FavoritesView: View {
                 .scrollContentBackground(.hidden)
                 .navigationTitle(favorites.isEmpty ? "" : "Favorites")
                 .navigationDestination(for: BookItem.self){ item in
-                    DetailView(park: item)
+                    DetailView(book: item)
                 }
                 .overlay {
                     if favorites.isEmpty {

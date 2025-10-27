@@ -1,6 +1,6 @@
 //
 //  DetailView.swift
-//  NationalParksCatalog
+//  BookExplorer
 //
 //  Created by Ahmet Cakir on 9/19/25.
 //
@@ -10,7 +10,7 @@ import SwiftData
 
 struct DetailView: View {
     @Environment(\.dismiss) var dismiss
-    @Bindable var park: BookItem
+    @Bindable var book: BookItem
     
     var body: some View {
         ZStack{
@@ -19,14 +19,14 @@ struct DetailView: View {
             ScrollView {
                 
                 VStack (){
-                    Image(park.coverImage)
+                    Image(book.coverImage)
                         .resizable()
                         .scaledToFill()
                         .frame(width: 180, height: 300)
                         .clipped()
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                     
-                    Text(park.title)
+                    Text(book.title)
                         .font(.title)
                         .foregroundStyle(Color("PrimaryBlue"))
                         .padding()
@@ -34,7 +34,7 @@ struct DetailView: View {
                     HStack {
                         Spacer()
                         
-                        Text(park.author)
+                        Text(book.author)
                             .font(.headline)
                             .fontWeight(.bold)
                             .foregroundStyle(.secondary)
@@ -42,14 +42,14 @@ struct DetailView: View {
                         
                         Spacer()
                         
-                        Text(park.genre)
+                        Text(book.genre)
                             .font(.headline)
                             .fontWeight(.bold)
                             .foregroundStyle(.secondary)
                         
                         Spacer()
                         
-                        Text(park.yearPublished)
+                        Text(book.yearPublished)
                             .font(.headline)
                             .fontWeight(.bold)
                             .foregroundStyle(.secondary)
@@ -57,7 +57,7 @@ struct DetailView: View {
                         Spacer()
                     }
                     
-                    Text(park.details)
+                    Text(book.details)
                         .font(.body)
                         .padding()
                     
@@ -94,9 +94,9 @@ struct DetailView: View {
                     
                     ToolbarItem(placement: .topBarTrailing) {
                         Button { // Favorite button
-                            park.isFavorite.toggle()
+                            book.isFavorite.toggle()
                         } label: {
-                            Image(systemName: park.isFavorite ? "heart.fill" : "heart")
+                            Image(systemName: book.isFavorite ? "heart.fill" : "heart")
                                 .font(.title)
                                 .foregroundStyle(Color("SecondaryBlue"))
                         }
@@ -124,7 +124,7 @@ struct DetailView: View {
                 isFavorite: false
             )
             
-            return DetailView(park: sampleData)
+            return DetailView(book: sampleData)
                 .modelContainer(container)
         } catch {
             fatalError("Could not load preview data: \(error.localizedDescription)")

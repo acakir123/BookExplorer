@@ -1,6 +1,6 @@
 //
 //  CatalogData.swift
-//  NationalParksCatalog
+//  BookExplorer
 //
 //  Created by Ahmet Cakir on 9/19/25.
 //
