@@ -60,7 +60,7 @@ struct CatalogGridView: View {
                                     
                                     HStack {
                                         
-                                        Spacer()
+                                        //Spacer()
                                         
                                         Text("\(park.author)")
                                             .font(.subheadline)
@@ -78,9 +78,20 @@ struct CatalogGridView: View {
                                         }
                                         .padding(.horizontal)
                                         
-                                        Spacer()
                                     }
                                     .padding(.bottom, 1)
+                                    
+                                    HStack {
+                                        Text(park.genre)
+                                            .font(.caption)
+                                            .foregroundStyle(Color("PrimaryBlue"))
+                                        
+                                        Spacer()
+                                        
+                                        Text(park.yearPublished)
+                                            .font(.caption)
+                                            .foregroundStyle(Color("PrimaryBlue"))
+                                    }
                                     
                                     
                                 }
