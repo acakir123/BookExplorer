@@ -38,9 +38,9 @@ struct StatsView: View {
                 // Header
                 HStack(spacing: 8) {
                     Image(systemName: "chart.xyaxis.line")
-                        .font(.title2.weight(.semibold))
+                        .font(.title.weight(.semibold))
                     Text("Reading statistics")
-                        .font(.title2.weight(.bold))
+                        .font(.title.weight(.bold))
                     Spacer()
                 }
                 .accessibilityElement(children: .combine)
@@ -55,21 +55,24 @@ struct StatsView: View {
                 
                 // MARK: Genre Breakdown
                 Text("Genre breakdown")
-                    .font(.title3.weight(.semibold))
+                    .font(.title2.weight(.semibold))
                     .padding(.top, 8)
-                
+
                 HStack(alignment: .center, spacing: 16) {
                     // Pie chart
                     PieChartView(data: placeholderGenres)
-                        .frame(width: 180, height: 180)
+                        .frame(width: 160, height: 160)
                         .accessibilityLabel("Genre breakdown pie chart")
-                    
+
                     // Chart legend
                     VStack(alignment: .leading, spacing: 10) {
                         ForEach(placeholderGenres) { stat in
-                            LegendRow(color: stat.color, text: stat.name, percent: stat.percentString(in: placeholderGenres))
+                            LegendRow(
+                                color: stat.color,
+                                text: stat.name,
+                                percent: stat.percentString(in: placeholderGenres)
+                            )
                         }
-                        Spacer(minLength: 0)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -79,7 +82,7 @@ struct StatsView: View {
                 
                 // MARK: Decade breakdown
                 Text("Decade breakdown")
-                    .font(.title3.weight(.semibold))
+                    .font(.title2.weight(.semibold))
                     .padding(.top, 8)
 
                 StackedBarChartView(data: placeholderDecades)
@@ -100,7 +103,8 @@ struct StatCard: View {
     let text: String
     
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
+            // Background
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color("SecondaryBackground"))
                 .overlay(
@@ -108,26 +112,31 @@ struct StatCard: View {
                         .stroke(Color(.separator), lineWidth: 0.5)
                 )
             
-            VStack(spacing: 6) {
+            VStack(spacing: 0) {
+                // Title pinned at top
                 Text(title)
-                    .font(.headline)
+                    .font(.system(size: 24, weight: .bold))
                     .foregroundStyle(Color("PrimaryBlue"))
                     .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
                     .padding(.top, 12)
+                    .frame(maxWidth: .infinity)
                 
+                Spacer() // pushes text to vertical center
+                
+                // Main centered text
                 Text(text)
-                    .font(.headline)
+                    .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(Color(.black))
                     .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.6) // shrink if too long
+                    .lineLimit(1)
                     .frame(maxWidth: .infinity)
                 
-                Spacer(minLength: 0)
+                Spacer(minLength: 12)
             }
             .padding(.horizontal, 12)
-            .padding(.bottom, 12)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(height: 140)
     }
 }
-
