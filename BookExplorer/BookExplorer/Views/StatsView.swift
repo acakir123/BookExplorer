@@ -35,7 +35,7 @@ struct StatsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                // Header
+                // MARK: Header
                 HStack(spacing: 8) {
                     Image(systemName: "chart.xyaxis.line")
                         .font(.title.weight(.semibold))
@@ -43,9 +43,8 @@ struct StatsView: View {
                         .font(.title.weight(.bold))
                     Spacer()
                 }
-                .accessibilityElement(children: .combine)
                 
-                // 2x2 Grid of Stat Cards
+                // MARK: 2x2 Grid of Stat Cards
                 LazyVGrid(columns: columns, spacing: 12) {
                     StatCard(title: "# Favorites", text: "45")
                     StatCard(title: "# Genres", text: "12")
@@ -85,6 +84,7 @@ struct StatsView: View {
                     .font(.title2.weight(.semibold))
                     .padding(.top, 8)
 
+                // Stacked bar chart
                 StackedBarChartView(data: placeholderDecades)
                     .frame(height: 70) // bar + labels total height
                     .padding()
@@ -104,7 +104,7 @@ struct StatCard: View {
     
     var body: some View {
         ZStack(alignment: .top) {
-            // Background
+            // Secondary Background for card color
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color("SecondaryBackground"))
                 .overlay(
@@ -113,7 +113,7 @@ struct StatCard: View {
                 )
             
             VStack(spacing: 0) {
-                // Title pinned at top
+                // Title
                 Text(title)
                     .font(.system(size: 24, weight: .bold))
                     .foregroundStyle(Color("PrimaryBlue"))
@@ -121,7 +121,7 @@ struct StatCard: View {
                     .padding(.top, 12)
                     .frame(maxWidth: .infinity)
                 
-                Spacer() // pushes text to vertical center
+                Spacer() // pushes card text to vertical center
                 
                 // Main centered text
                 Text(text)
@@ -129,7 +129,7 @@ struct StatCard: View {
                     .foregroundStyle(Color(.black))
                     .multilineTextAlignment(.center)
                     .minimumScaleFactor(0.6) // shrink if too long
-                    .lineLimit(1)
+                    .lineLimit(1) // One line max
                     .frame(maxWidth: .infinity)
                 
                 Spacer(minLength: 12)

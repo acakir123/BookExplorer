@@ -7,13 +7,14 @@
 
 import SwiftUI
 
-// Used for the pie & bar chart
+// A single statistic category (genre in pie chart & Decade in bar graph)
 struct CategoryStat: Identifiable {
     let id = UUID()
     let name: String
     let value: Double
     let color: Color
     
+    // Helper function to calculate this category's percentage share relative to all others
     func percentString(in all: [CategoryStat]) -> String {
             let total = all.map { $0.value }.reduce(0, +)
             guard total > 0 else { return "0%" }
