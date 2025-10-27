@@ -12,27 +12,43 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var items: [BookItem]
     
+    // Starts selected tab on catalog screen
+    @State private var selectedTab: AppTab = .catalog
+    // Ensures data is only seeded once
+    @State private var hasSeeded = false
+    
     var body: some View {
-        TabView {
-            Tab("Catalog", systemImage: "square.grid.2x2"){
-                CatalogGridView()
-                    .task{
-                        if items.isEmpty { // checks if items is empty to seed
-                            seed()
-                        }
-                    }
+        // Custom tab bar at bottom
+        ZStack {
+            Group {
+                switch selectedTab {
+                case .catalog:
+                    CatalogGridView()
+                case .favorites:
+                    FavoritesView()
+                case .stats:
+                    StatsView()
+                }
             }
-            
-            Tab("Favorites", systemImage: "heart.fill"){
-                FavoritesView()
-            }
-            
-            Tab("Stats", systemImage: "chart.xyaxis.line"){
-                StatsView()
-            }
-            
+            // Fade transition when selecting new tab
+            .transition(.opacity)
+            .animation(.easeInOut(duration: 0.2), value: selectedTab)
         }
-            
+        // Place custom tab bar at bottom
+        .safeAreaInset(edge: .bottom) {
+            CustomTabBar(selectedTab: $selectedTab)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 8)
+        }
+        // Seeds the sample data when view appears (only once)
+        .task {
+            guard !hasSeeded else { return }
+            if items.isEmpty {
+                seed()
+            }
+            hasSeeded = true
+        }
+        .background(Color("BackgroundColor").ignoresSafeArea())
     }
 
     @MainActor
