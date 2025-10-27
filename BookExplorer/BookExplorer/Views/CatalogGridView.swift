@@ -105,6 +105,10 @@ struct CatalogGridView: View {
                     .padding(.horizontal)
                     
                 }
+                // Extra scroll space so bottom cards are visible above tab bar
+                .safeAreaInset(edge: .bottom) {
+                    Color.clear.frame(height: 92) // tab bar height + a little extra
+                }
                 .navigationTitle("Featured Books")
                 .navigationDestination(for: BookItem.self) { park in
                     DetailView(park: park)
