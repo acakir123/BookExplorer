@@ -20,7 +20,7 @@ struct StatsView: View {
         .init(name: "Fantasy",    value: 30, color: Color("Graph1")),
         .init(name: "Sci-Fi",     value: 25, color: Color("Graph2")),
         .init(name: "Mystery",    value: 20, color: Color("Graph3")),
-        .init(name: "Non-fiction",value: 15, color: Color("Graph4")),
+        .init(name: "Non-Fiction",value: 15, color: Color("Graph4")),
         .init(name: "Romance",    value: 10, color: Color("Graph5"))
     ]
     
@@ -39,7 +39,7 @@ struct StatsView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "chart.xyaxis.line")
                         .font(.title.weight(.semibold))
-                    Text("Reading statistics")
+                    Text("Reading Statistics")
                         .font(.title.weight(.bold))
                     Spacer()
                 }
@@ -48,12 +48,12 @@ struct StatsView: View {
                 LazyVGrid(columns: columns, spacing: 12) {
                     StatCard(title: "# Favorites", text: "45")
                     StatCard(title: "# Genres", text: "12")
-                    StatCard(title: "Avg decade", text: "2010s")
-                    StatCard(title: "Avg author", text: "JK Rowling")
+                    StatCard(title: "Avg Decade", text: "2010s")
+                    StatCard(title: "Avg Author", text: "JK Rowling")
                 }
                 
                 // MARK: Genre Breakdown
-                Text("Genre breakdown")
+                Text("Genre Breakdown")
                     .font(.title2.weight(.semibold))
                     .padding(.top, 8)
 
@@ -80,7 +80,7 @@ struct StatsView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 
                 // MARK: Decade breakdown
-                Text("Decade breakdown")
+                Text("Decade Breakdown")
                     .font(.title2.weight(.semibold))
                     .padding(.top, 8)
 
