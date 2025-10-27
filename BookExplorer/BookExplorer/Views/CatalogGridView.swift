@@ -35,7 +35,7 @@ struct CatalogGridView: View {
     var body: some View {
         NavigationStack (path: $path){
             ZStack{
-                Color(hex: "E8D6CA")
+                Color("BackgroundColor")
                     .ignoresSafeArea(edges: .all)
                 
                 ScrollView {
@@ -56,7 +56,7 @@ struct CatalogGridView: View {
                                         .font(.title3)
                                         .fontWeight(.bold)
                                         .padding(.vertical, 3)
-                                        .foregroundStyle(Color(hex: "234C6A"))
+                                        .foregroundStyle(Color("PrimaryBlue"))
                                     
                                     HStack {
                                         
@@ -64,7 +64,7 @@ struct CatalogGridView: View {
                                         
                                         Text("\(park.author)")
                                             .font(.subheadline)
-                                            .foregroundStyle(Color(hex: "234C6A"))
+                                            .foregroundStyle(Color("PrimaryBlue"))
                                         
                                         Spacer()
                                         
@@ -74,7 +74,7 @@ struct CatalogGridView: View {
                                             }
                                         } label: {
                                             Image(systemName: park.isFavorite ? "heart.fill" : "heart")
-                                                .foregroundStyle(Color(hex: "234C6A"))
+                                                .foregroundStyle(Color("PrimaryBlue"))
                                         }
                                         .padding(.horizontal)
                                         

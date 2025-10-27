@@ -14,7 +14,7 @@ struct DetailView: View {
     
     var body: some View {
         ZStack{
-            Color(hex: "E8D6CA")
+            Color("BackgroundColor")
                 .ignoresSafeArea(edges: .all)
             ScrollView {
                 
@@ -69,7 +69,7 @@ struct DetailView: View {
                             .padding(.vertical, 8)
                     }
                     .background(Capsule(style: .continuous))
-                    .foregroundStyle(Color(hex: "558DB4"))
+                    .foregroundStyle(Color("SecondaryBlue"))
                     .padding(.horizontal)
                     .padding(.bottom, 1)*/
                     
@@ -84,7 +84,7 @@ struct DetailView: View {
                             .padding(.vertical, 8)
                     }
                     .background(Capsule(style: .continuous))
-                    .foregroundStyle(Color(hex: "558DB4"))
+                    .foregroundStyle(Color("SecondaryBlue"))
                     .padding(.horizontal)
                     
                     
@@ -99,7 +99,7 @@ struct DetailView: View {
                         } label: {
                             Image(systemName: "chevron.left.circle")
                                 .font(.title)
-                                .foregroundStyle(Color(hex: "558DB4"))
+                                .foregroundStyle(Color("SecondaryBlue"))
                         }
                     }
                     
@@ -109,7 +109,7 @@ struct DetailView: View {
                         } label: {
                             Image(systemName: park.isFavorite ? "heart.fill" : "heart")
                                 .font(.title)
-                                .foregroundStyle(Color(hex: "558DB4"))
+                                .foregroundStyle(Color("SecondaryBlue"))
                         }
                     }
                 }

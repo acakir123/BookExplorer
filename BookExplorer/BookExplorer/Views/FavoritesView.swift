@@ -16,7 +16,7 @@ struct FavoritesView: View {
     var body: some View {
         NavigationStack(path: $path) {
             ZStack {
-                Color(hex: "E8D6CA")
+                Color("BackgroundColor")
                     .ignoresSafeArea(edges: .all)
                 
                 List {
@@ -34,11 +34,11 @@ struct FavoritesView: View {
                                         .fontWeight(.bold)
                                         .padding(.vertical, 5)
                                         .padding(.horizontal, 5)
-                                        .foregroundStyle(Color(hex: "234C6A"))
+                                        .foregroundStyle(Color("PrimaryBlue"))
                                     
                                     Text(item.author)
                                         .font(.subheadline)
-                                        .foregroundStyle(Color(hex: "234C6A"))
+                                        .foregroundStyle(Color("PrimaryBlue"))
                                         .fontWeight(.medium)
                                         .padding(.horizontal, 5)
                                 }

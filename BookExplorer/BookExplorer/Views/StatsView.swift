@@ -37,7 +37,7 @@ struct StatsView: View {
             }
             .padding(16)
         }
-        .background(Color(hex: "E8D6CA"))
+        .background(Color("BackgroundColor"))
     }
 }
 
@@ -48,7 +48,7 @@ private struct StatCard: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(hex: "FFF8F3"))
+                .fill(Color("SecondaryBackground"))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .stroke(Color(.separator), lineWidth: 0.5)

@@ -18,11 +18,11 @@ struct CustomContentUnavailableView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 80, height: 80)
-                .foregroundStyle(Color(hex: "234C6A"))
+                .foregroundStyle(Color("PrimaryBlue"))
             
             Text(title)
                 .font(.title)
-                .foregroundStyle(Color(hex: "234C6A"))
+                .foregroundStyle(Color("PrimaryBlue"))
         } description: {
             Text(description)
         }
