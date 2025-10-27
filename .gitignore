@@ -1,2 +1,6 @@
 BookExplorer.xcodeproj/xcuserdata/
 buildServer.json
+**/xcuserdata/
+**/*.xcuserstate
+**/*.xcscmblueprint
+buildServer.json
