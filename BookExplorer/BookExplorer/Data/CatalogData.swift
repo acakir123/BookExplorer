@@ -6,6 +6,7 @@
 //
 import Foundation
 
+// Placeholder data that will be replaced by actual data once we implement with the Open Library API
 let catalogData: [BookItem] = [
     BookItem(
         id: 1,

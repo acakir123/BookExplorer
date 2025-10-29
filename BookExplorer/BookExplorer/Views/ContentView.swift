@@ -52,7 +52,7 @@ struct ContentView: View {
     }
 
     @MainActor
-    private func seed() { // seeds data into modelContext from catalogData
+    private func seed() { // seeds placeholder data into modelContext from catalogData
         for s in catalogData {
             modelContext.insert(BookItem(id: s.id, title: s.title, author: s.author, details: s.details, genre: s.genre, yearPublished: s.yearPublished, coverImage: s.coverImage, isFavorite: s.isFavorite))
         }
