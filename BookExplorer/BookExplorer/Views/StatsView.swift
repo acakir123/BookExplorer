@@ -48,8 +48,8 @@ struct StatsView: View {
                 LazyVGrid(columns: columns, spacing: 12) {
                     StatCard(title: "# Favorites", text: "45")
                     StatCard(title: "# Genres", text: "12")
-                    StatCard(title: "Avg Decade", text: "2010s")
-                    StatCard(title: "Avg Author", text: "JK Rowling")
+                    StatCard(title: "Favorite Decade", text: "2010s")
+                    StatCard(title: "Favorite Author", text: "JK Rowling")
                 }
                 
                 // MARK: Genre Breakdown
