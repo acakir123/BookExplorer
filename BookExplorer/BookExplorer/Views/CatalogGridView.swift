@@ -74,7 +74,6 @@ struct CatalogGridView: View {
                                             Image(systemName: book.isFavorite ? "heart.fill" : "heart")
                                                 .foregroundStyle(Color("PrimaryBlue"))
                                         }
-                                        .padding(.horizontal)
                                         
                                     }
                                     .padding(.bottom, 1)
