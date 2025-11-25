@@ -23,7 +23,8 @@ struct CatalogGridView: View {
         }
         return books.filter { // filter books using title and subtitle
             $0.title.localizedCaseInsensitiveContains(searchText) ||
-            $0.author.localizedCaseInsensitiveContains(searchText)
+            $0.author.localizedCaseInsensitiveContains(searchText) ||
+            $0.genre.localizedCaseInsensitiveContains(searchText)
         }
     }
     
@@ -52,11 +53,19 @@ struct CatalogGridView: View {
                                         .clipShape(RoundedRectangle(cornerRadius: 8))
                                     
                                     
-                                    Text("\(book.title)")
-                                        .font(.title3)
-                                        .fontWeight(.bold)
-                                        .padding(.vertical, 3)
-                                        .foregroundStyle(Color("PrimaryBlue"))
+                                    HStack {
+                                        Text("\(book.title)")
+                                            .font(.title3)
+                                            .fontWeight(.bold)
+                                            .padding(.vertical, 3)
+                                            .foregroundStyle(Color("PrimaryBlue"))
+                                        
+                                        Spacer()
+                                        
+                                        Text(book.yearPublished)
+                                            .font(.subheadline)
+                                            .foregroundStyle(Color("PrimaryBlue"))
+                                    }
                                     
                                     HStack {
                                                                                 
@@ -75,19 +84,19 @@ struct CatalogGridView: View {
                                                 .foregroundStyle(Color("PrimaryBlue"))
                                         }
                                         
+                                        
                                     }
                                     .padding(.bottom, 1)
                                     
                                     HStack {
+                                        Spacer()
+                                        
                                         Text(book.genre)
                                             .font(.caption)
                                             .foregroundStyle(Color("PrimaryBlue"))
                                         
                                         Spacer()
                                         
-                                        Text(book.yearPublished)
-                                            .font(.caption)
-                                            .foregroundStyle(Color("PrimaryBlue"))
                                     }
                                     
                                     
