@@ -86,8 +86,9 @@ struct DetailView: View {
                         Button { // Custom back button
                             dismiss()
                         } label: {
-                            Image(systemName: "chevron.left.circle")
+                            Image(systemName: "chevron.left")
                                 .font(.title)
+                                .fontWeight(.semibold)
                                 .foregroundStyle(Color("SecondaryBlue"))
                         }
                     }
@@ -98,6 +99,7 @@ struct DetailView: View {
                         } label: {
                             Image(systemName: book.isFavorite ? "heart.fill" : "heart")
                                 .font(.title)
+                                .fontWeight(.semibold)
                                 .foregroundStyle(Color("SecondaryBlue"))
                         }
                     }
