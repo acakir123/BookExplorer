@@ -12,32 +12,44 @@ import SwiftData
 @Model
 final class BookItem { // Class to hold our book data
     var id: Int
-        var title: String
-        var author: String
-        var details: String
-        var genre: String
-        var yearPublished: String
-        var coverImage: String // String for now will probably be URL when fetching with API
-        var isFavorite: Bool = false
-        
-        init(id: Int,
-             title: String,
-             author: String,
-             details: String,
-             genre: String,
-             yearPublished: String,
-             coverImage: String,
-             isFavorite: Bool = false) {
-            
-            self.id = id
-            self.title = title
-            self.author = author
-            self.details = details
-            self.genre = genre
-            self.yearPublished = yearPublished
-            self.coverImage = coverImage
-            self.isFavorite = isFavorite
-        }
+    var title: String
+    var author: String
+    var details: String
+    var genre: String
+    var yearPublished: String
+    var coverImage: String     // still used for local assets / previews
+    var isFavorite: Bool = false
+    
+    // NEW: Open Library fields
+    var openLibraryKey: String?   // e.g. "/works/OL27448W"
+    var coverURL: String?         // remote cover URL
+    var inCatalogFeed: Bool       // is in current catalog (trending/search/similar)
+    
+    init(
+        id: Int,
+        title: String,
+        author: String,
+        details: String,
+        genre: String,
+        yearPublished: String,
+        coverImage: String,
+        isFavorite: Bool = false,
+        openLibraryKey: String? = nil,
+        coverURL: String? = nil,
+        inCatalogFeed: Bool = true
+    ) {
+        self.id = id
+        self.title = title
+        self.author = author
+        self.details = details
+        self.genre = genre
+        self.yearPublished = yearPublished
+        self.coverImage = coverImage
+        self.isFavorite = isFavorite
+        self.openLibraryKey = openLibraryKey
+        self.coverURL = coverURL
+        self.inCatalogFeed = inCatalogFeed
+    }
 }
 
 extension BookItem { // Extension to help with previews

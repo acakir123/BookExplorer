@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct FavoritesView: View {
-    @Query(filter: #Predicate<BookItem> { $0.isFavorite }) // This fetches Catalog items where isFavorite is set to true
+    @Query(filter: #Predicate<BookItem> { $0.isFavorite })
     private var favorites: [BookItem]
     @State private var path = [BookItem]()
     
@@ -23,8 +23,7 @@ struct FavoritesView: View {
                     ForEach(favorites) { item in
                         NavigationLink(value: item) {
                             HStack {
-                                Image(item.coverImage)
-                                    .resizable()
+                                coverView(for: item)
                                     .frame(width: 60, height: 80)
                                     .clipped()
                                     .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -48,18 +47,59 @@ struct FavoritesView: View {
                 }
                 .scrollContentBackground(.hidden)
                 .navigationTitle(favorites.isEmpty ? "" : "Favorites")
-                .navigationDestination(for: BookItem.self){ item in
+                .navigationDestination(for: BookItem.self) { item in
                     DetailView(book: item)
                 }
                 .overlay {
                     if favorites.isEmpty {
-                        CustomContentUnavailableView(icon: "heart.slash", title: "No Favorites", description: "You haven't favorited any Books yet.")
+                        CustomContentUnavailableView(
+                            icon: "heart.slash",
+                            title: "No Favorites",
+                            description: "You haven't favorited any Books yet."
+                        )
                     }
                 }
             }
         }
     }
+    
+    @ViewBuilder
+    private func coverView(for item: BookItem) -> some View {
+        if let urlString = item.coverURL,
+           let url = URL(string: urlString) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .empty:
+                    Color.gray.opacity(0.2)
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    fallbackCover(for: item)
+                @unknown default:
+                    fallbackCover(for: item)
+                }
+            }
+        } else {
+            fallbackCover(for: item)
+        }
+    }
+    
+    @ViewBuilder
+    private func fallbackCover(for item: BookItem) -> some View {
+        if !item.coverImage.isEmpty {
+            Image(item.coverImage)
+                .resizable()
+                .scaledToFill()
+        } else {
+            Color.gray.opacity(0.2)
+        }
+    }
 }
+
+// ... keep your favoritesPreview extension + preview the same
+
 
 extension BookItem {
     @MainActor

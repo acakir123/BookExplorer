@@ -10,6 +10,8 @@ import SwiftData
 
 @main
 struct BookExplorerApp: App {
+    @StateObject private var tabSelection = TabSelection()
+    
     // This is for better contrast with our search bar and custom background
     init() {
             let textFieldAppearance = UITextField.appearance(whenContainedInInstancesOf: [UISearchBar.self])
@@ -21,6 +23,7 @@ struct BookExplorerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(tabSelection)
                 .modelContainer(for : BookItem.self)
         }
     }

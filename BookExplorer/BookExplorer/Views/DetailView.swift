@@ -10,18 +10,21 @@ import SwiftData
 
 struct DetailView: View {
     @Environment(\.dismiss) var dismiss
+    @Environment(\.modelContext) private var modelContext
+    
+    @EnvironmentObject var tabSelection: TabSelection
+    
     @Bindable var book: BookItem
     
     var body: some View {
-        ZStack{
+        ZStack {
             Color("BackgroundColor")
                 .ignoresSafeArea(edges: .all)
+            
             ScrollView {
-                
-                VStack (){
-                    Image(book.coverImage)
-                        .resizable()
-                        .scaledToFill()
+                VStack {
+                    // Cover image
+                    coverView
                         .frame(width: 180, height: 300)
                         .clipped()
                         .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -38,7 +41,6 @@ struct DetailView: View {
                             .font(.headline)
                             .fontWeight(.bold)
                             .foregroundStyle(.secondary)
-                            
                         
                         Spacer()
                         
@@ -61,9 +63,10 @@ struct DetailView: View {
                         .font(.body)
                         .padding()
                     
-                    
-                    Button { // Search similar button
-                        dismiss() // Currently only dismisses but when we integrate the API it'll search for similar books and take the user to CatalogGridView
+                    Button {
+                        Task {
+                            await searchSimilarAndDismiss()
+                        }
                     } label: {
                         Text("Search Similar")
                             .font(.subheadline)
@@ -76,14 +79,12 @@ struct DetailView: View {
                     .foregroundStyle(Color("SecondaryBlue"))
                     .padding(.horizontal)
                     
-                    
-                    
                     Spacer()
                 }
-                .navigationBarBackButtonHidden(true) // To hide the default back button
+                .navigationBarBackButtonHidden(true)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
-                        Button { // Custom back button
+                        Button {
                             dismiss()
                         } label: {
                             Image(systemName: "chevron.left")
@@ -94,7 +95,7 @@ struct DetailView: View {
                     }
                     
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button { // Favorite button
+                        Button {
                             book.isFavorite.toggle()
                         } label: {
                             Image(systemName: book.isFavorite ? "heart.fill" : "heart")
@@ -107,6 +108,64 @@ struct DetailView: View {
             }
         }
     }
+    
+    // MARK: - Cover
+    
+    @ViewBuilder
+    private var coverView: some View {
+        if let urlString = book.coverURL,
+           let url = URL(string: urlString) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .empty:
+                    Color.gray.opacity(0.2)
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    fallbackCover
+                @unknown default:
+                    fallbackCover
+                }
+            }
+        } else {
+            fallbackCover
+        }
+    }
+    
+    @ViewBuilder
+    private var fallbackCover: some View {
+        if !book.coverImage.isEmpty {
+            Image(book.coverImage)
+                .resizable()
+                .scaledToFill()
+        } else {
+            Color.gray.opacity(0.2)
+        }
+    }
+    
+    // MARK: - Search Similar
+    
+    private func searchSimilarAndDismiss() async {
+        do {
+            let docs = try await OpenLibraryAPI.shared.searchSimilarBooks(
+                title: book.title,
+                genre: book.genre,
+                limit: 10
+            )
+            try await syncBooksFromOpenLibrary(docs, in: modelContext)
+        } catch {
+            // handle error
+        }
+
+        await MainActor.run {
+            // Switch tab
+            tabSelection.selectedTab = .catalog
+            // Dismiss detail view
+            dismiss()
+        }
+    }
 }
 
 #Preview {
@@ -114,7 +173,7 @@ struct DetailView: View {
         do {
             let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
             let container = try ModelContainer(for: BookItem.self, configurations: configuration)
-                
+            
             let sampleData = BookItem(
                 id: 1,
                 title: "To Kill a Mockingbird",
@@ -133,3 +192,4 @@ struct DetailView: View {
         }
     }
 }
+

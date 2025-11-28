@@ -10,21 +10,30 @@ import SwiftData
 
 struct CatalogGridView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var books: [BookItem]
+    
+    // Only show books that belong to the current catalog feed
+    @Query(filter: #Predicate<BookItem> { $0.inCatalogFeed })
+    private var books: [BookItem]
     
     @State private var path = [BookItem]()
     
     // State variable for searching books
     @State private var searchText = ""
     
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+    
+    @State private var hasLoadedTrending = false
+    
     private var filteredBooks: [BookItem] {
-        guard !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return books // If empty return the normal list of books
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            return books
         }
-        return books.filter { // filter books using title and subtitle
-            $0.title.localizedCaseInsensitiveContains(searchText) ||
-            $0.author.localizedCaseInsensitiveContains(searchText) ||
-            $0.genre.localizedCaseInsensitiveContains(searchText)
+        return books.filter {
+            $0.title.localizedCaseInsensitiveContains(trimmed) ||
+            $0.author.localizedCaseInsensitiveContains(trimmed) ||
+            $0.genre.localizedCaseInsensitiveContains(trimmed)
         }
     }
     
@@ -34,27 +43,25 @@ struct CatalogGridView: View {
     ]
     
     var body: some View {
-        NavigationStack (path: $path){
-            ZStack{
+        NavigationStack (path: $path) {
+            ZStack {
                 Color("BackgroundColor")
                     .ignoresSafeArea(edges: .all)
                 
                 ScrollView {
-                    LazyVGrid(columns: layout){
+                    LazyVGrid(columns: layout) {
                         ForEach(filteredBooks) { book in
-                            NavigationLink(value: book){
-                                VStack (alignment: .leading){
+                            NavigationLink(value: book) {
+                                VStack(alignment: .leading) {
                                     
-                                    Image(book.coverImage)
-                                        .resizable()
-                                        .scaledToFill()
+                                    // Cover image: remote if available, fallback to asset
+                                    bookCoverView(for: book)
                                         .frame(width: 165, height: 200)
                                         .clipped()
                                         .clipShape(RoundedRectangle(cornerRadius: 8))
                                     
-                                    
                                     HStack {
-                                        Text("\(book.title)")
+                                        Text(book.title)
                                             .font(.title3)
                                             .fontWeight(.bold)
                                             .padding(.vertical, 3)
@@ -68,8 +75,7 @@ struct CatalogGridView: View {
                                     }
                                     
                                     HStack {
-                                                                                
-                                        Text("\(book.author)")
+                                        Text(book.author)
                                             .font(.subheadline)
                                             .foregroundStyle(Color("PrimaryBlue"))
                                         
@@ -83,8 +89,6 @@ struct CatalogGridView: View {
                                             Image(systemName: book.isFavorite ? "heart.fill" : "heart")
                                                 .foregroundStyle(Color("PrimaryBlue"))
                                         }
-                                        
-                                        
                                     }
                                     .padding(.bottom, 1)
                                     
@@ -96,10 +100,7 @@ struct CatalogGridView: View {
                                             .foregroundStyle(Color("PrimaryBlue"))
                                         
                                         Spacer()
-                                        
                                     }
-                                    
-                                    
                                 }
                                 .padding(8)
                                 .background(.regularMaterial)
@@ -108,10 +109,8 @@ struct CatalogGridView: View {
                             }
                             .foregroundStyle(.primary)
                         }
-                        
                     }
                     .padding(.horizontal)
-                    
                 }
                 // Extra scroll space so bottom cards are visible above tab bar
                 .safeAreaInset(edge: .bottom) {
@@ -121,9 +120,131 @@ struct CatalogGridView: View {
                 .navigationDestination(for: BookItem.self) { book in
                     DetailView(book: book)
                 }
+                
+                // Loading overlay
+                if isLoading {
+                    ProgressView("Loading books...")
+                        .padding()
+                        .background(.regularMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                
+                // Error overlay
+                if let errorMessage {
+                    VStack {
+                        Spacer()
+                        Text(errorMessage)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .padding(8)
+                    }
+                }
             }
         }
-        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search Books") // For search bar
+        .task {
+            if !hasLoadedTrending {
+                hasLoadedTrending = true
+                await loadTrending()
+            }
+        }
+        .searchable(
+            text: $searchText,
+            placement: .navigationBarDrawer(displayMode: .always),
+            prompt: "Search Books"
+        )
+        .onSubmit(of: .search) {
+            Task {
+                await performSearch()
+            }
+        }
+        .onChange(of: searchText) { newValue in
+            let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty {
+                // When the user clears the search, go back to trending
+                Task {
+                    await loadTrending()
+                }
+            }
+        }
+    }
+    
+    // MARK: - Cover View
+    
+    @ViewBuilder
+    private func bookCoverView(for book: BookItem) -> some View {
+        if let urlString = book.coverURL,
+           let url = URL(string: urlString) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .empty:
+                    Color.gray.opacity(0.2)
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    fallbackCover(for: book)
+                @unknown default:
+                    fallbackCover(for: book)
+                }
+            }
+        } else {
+            fallbackCover(for: book)
+        }
+    }
+    
+    @ViewBuilder
+    private func fallbackCover(for book: BookItem) -> some View {
+        if !book.coverImage.isEmpty {
+            Image(book.coverImage)
+                .resizable()
+                .scaledToFill()
+        } else {
+            // Simple colored placeholder if we have no local asset
+            Color.gray.opacity(0.2)
+        }
+    }
+    
+    // MARK: - Networking
+    
+    private func loadTrending() async {
+        await loadBooks { api in
+            try await api.fetchTrending(limit: 10)
+        }
+    }
+    
+    private func performSearch() async {
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            await loadTrending()
+            return
+        }
+        
+        await loadBooks { api in
+            try await api.searchBooks(query: trimmed, limit: 10)
+        }
+    }
+    
+    private func loadBooks(
+        _ block: (OpenLibraryAPI) async throws -> [OpenLibraryDoc]
+    ) async {
+        await MainActor.run {
+            isLoading = true
+            errorMessage = nil
+        }
+        
+        do {
+            let docs = try await block(OpenLibraryAPI.shared)
+            try await syncBooksFromOpenLibrary(docs, in: modelContext)
+        } catch {
+            await MainActor.run {
+                errorMessage = "Could not load books. Please try again."
+            }
+        }
+        
+        await MainActor.run {
+            isLoading = false
+        }
     }
 }
 
@@ -131,3 +252,4 @@ struct CatalogGridView: View {
     CatalogGridView()
         .modelContainer(BookItem.preview)
 }
+
