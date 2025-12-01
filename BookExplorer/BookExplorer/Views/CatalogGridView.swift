@@ -141,10 +141,12 @@ struct CatalogGridView: View {
                 }
             }
         }
-        .task {
+        .onAppear {
             if !hasLoadedTrending {
                 hasLoadedTrending = true
-                await loadTrending()
+                Task {
+                    await loadTrending()
+                }
             }
         }
         .searchable(
