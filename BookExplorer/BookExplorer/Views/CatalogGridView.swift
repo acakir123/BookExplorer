@@ -24,15 +24,7 @@ struct CatalogGridView: View {
     @State private var errorMessage: String?
         
     private var filteredBooks: [BookItem] {
-        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            return books
-        }
-        return books.filter {
-            $0.title.localizedCaseInsensitiveContains(trimmed) ||
-            $0.author.localizedCaseInsensitiveContains(trimmed) ||
-            $0.genre.localizedCaseInsensitiveContains(trimmed)
-        }
+        books
     }
     
     let layout = [
