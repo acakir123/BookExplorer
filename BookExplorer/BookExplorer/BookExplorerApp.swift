@@ -11,6 +11,7 @@ import SwiftData
 @main
 struct BookExplorerApp: App {
     @StateObject private var tabSelection = TabSelection()
+    @StateObject private var catalogSearchState = CatalogSearchState()
     
     // This is for better contrast with our search bar and custom background
     init() {
@@ -24,6 +25,7 @@ struct BookExplorerApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(tabSelection)
+                .environmentObject(catalogSearchState)
                 .modelContainer(for : BookItem.self)
         }
     }
