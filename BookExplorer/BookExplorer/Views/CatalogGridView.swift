@@ -22,6 +22,8 @@ struct CatalogGridView: View {
     
     @State private var isLoading = false
     @State private var errorMessage: String?
+    
+    @State private var isRefreshing = false
         
     private var filteredBooks: [BookItem] {
         books
@@ -130,19 +132,32 @@ struct CatalogGridView: View {
                     }
                 }
             }
-        }
-        .onAppear {
-            // Only fetching trending if we currently have no feed books in SwiftData
-            if books.isEmpty {
-                Task {
-                    await loadTrending()
+            
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        Task {
+                            isRefreshing = true
+                            catalogSearchState.searchText = ""
+                            await loadTrending()
+                            isRefreshing = false
+                        }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundStyle(Color("PrimaryBlue"))
+                            .fontWeight(.medium)
+                    }
+                    .accessibilityLabel("Refresh Trending Books")
                 }
             }
         }
+        .onAppear {
+            if books.isEmpty && catalogSearchState.searchText.isEmpty {
+                Task { await loadTrending() }
+            }
+        }
         .searchable(
-            text: Binding(
-                get: { catalogSearchState.searchText },
-                set: { catalogSearchState.update($0) }),
+            text: $catalogSearchState.searchText,
             placement: .navigationBarDrawer(displayMode: .always),
             prompt: "Search Books"
         )
@@ -152,6 +167,8 @@ struct CatalogGridView: View {
             }
         }
         .onChange(of: catalogSearchState.searchText) { newValue in
+            guard !isRefreshing else { return }
+            
             let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
             if trimmed.isEmpty {
                 // When the user clears the search, go back to trending

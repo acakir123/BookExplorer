@@ -11,15 +11,14 @@ final class CatalogSearchState: ObservableObject {
 
     @AppStorage("catalogSearchText") private var storedSearchText: String = ""
 
-    @Published var searchText: String
-
-    init() {
-        let initial = UserDefaults.standard.string(forKey: "catalogSearchText") ?? ""
-        self.searchText = initial
+    @Published var searchText: String {
+        didSet {
+            storedSearchText = searchText        // keep it persisted
+        }
     }
 
-    func update(_ newValue: String) {
-        searchText = newValue
-        storedSearchText = newValue
+    init() {
+        // Initialize searchText from stored value
+        self.searchText = UserDefaults.standard.string(forKey: "catalogSearchText") ?? ""
     }
 }
