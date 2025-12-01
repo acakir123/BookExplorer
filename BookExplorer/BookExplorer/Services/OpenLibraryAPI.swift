@@ -19,24 +19,15 @@ struct OpenLibraryDoc: Decodable {
     let author_name: [String]?
     let first_publish_year: Int?
     let cover_i: Int?
-    let subject: [String]?
+    var subject: [String]?
 }
 
-struct TrendingResponse: Codable {
-    let works: [TrendingBook]
+struct TrendingResponse: Decodable {
+    let works: [OpenLibraryDoc]
 }
 
-struct TrendingBook: Codable { // To store trending books
-    let key: String
-    let title: String
-    let authors: [Author]?
-    let first_publish_year: Int?
-    let subject: [String]?
-    let cover_i: Int?
-    
-    struct Author: Codable {
-        let name: String?
-    }
+struct WorkDetail: Decodable {
+    let subjects: [String]?
 }
 
 extension OpenLibraryDoc {
@@ -89,6 +80,22 @@ final class OpenLibraryAPI {
         self.session = session
     }
     
+    private func fetchSubjects(for workKey: String) async throws -> [String] { // To get subjects for trending books
+        let cleanKey = workKey.hasPrefix("/") ? String(workKey.dropFirst()) : workKey
+        let url = baseURL.appendingPathComponent("\(cleanKey).json")
+
+        var request = URLRequest(url: url)
+        request.setValue(
+            "BookExplorer/1.0 (your-email@example.com)",
+            forHTTPHeaderField: "User-Agent"
+        )
+
+        let (data, _) = try await URLSession.shared.data(for: request)
+        let detail = try JSONDecoder().decode(WorkDetail.self, from: data)
+        // If the API doesn’t provide subjects, just return an empty array
+        return detail.subjects ?? []
+    }
+    
     /// "Trending" style feed using search.json & sort=random
     /// (10 random books as a stand-in for trending)
     func fetchTrending(limit: Int = 10) async throws -> [OpenLibraryDoc] {
@@ -98,25 +105,20 @@ final class OpenLibraryAPI {
             "BookExplorer/1.0 (your-email@example.com)",
             forHTTPHeaderField: "User-Agent"
         )
-        
-        let (data, _) = try await URLSession.shared.data(for: request)
 
-        let trending = try JSONDecoder().decode(TrendingResponse.self, from: data)
-        
-        // Map TrendingBook → OpenLibraryDoc
-        let mapped: [OpenLibraryDoc] = trending.works.map { work in
-            OpenLibraryDoc(
-                key: work.key,
-                title: work.title,
-                author_name: work.authors?.compactMap { $0.name } ?? [],
-                first_publish_year: work.first_publish_year,
-                cover_i: work.cover_i,
-                subject: work.subject ?? []
-            )
+        let (data, _) = try await URLSession.shared.data(for: request)
+        let response = try JSONDecoder().decode(TrendingResponse.self, from: data)
+
+        var docs = Array(response.works.prefix(limit))
+
+        for i in docs.indices { // populating subject here
+            if let subjects = try? await fetchSubjects(for: docs[i].key),
+               !subjects.isEmpty {
+                docs[i].subject = subjects
+            }
         }
-        
-        // Shuffle and limit
-        return Array(mapped.shuffled().prefix(limit))
+
+        return docs
     }
     
     /// Search by title, limited to 10 results
