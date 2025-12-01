@@ -22,6 +22,23 @@ struct OpenLibraryDoc: Decodable {
     let subject: [String]?
 }
 
+struct TrendingResponse: Codable {
+    let works: [TrendingBook]
+}
+
+struct TrendingBook: Codable { // To store trending books
+    let key: String
+    let title: String
+    let authors: [Author]?
+    let first_publish_year: Int?
+    let subject: [String]?
+    let cover_i: Int?
+    
+    struct Author: Codable {
+        let name: String?
+    }
+}
+
 extension OpenLibraryDoc {
     /// Large cover URL using Open Library covers API
     /// e.g. https://covers.openlibrary.org/b/id/258027-L.jpg
@@ -75,19 +92,31 @@ final class OpenLibraryAPI {
     /// "Trending" style feed using search.json & sort=random
     /// (10 random books as a stand-in for trending)
     func fetchTrending(limit: Int = 10) async throws -> [OpenLibraryDoc] {
-        var components = URLComponents(url: baseURL.appendingPathComponent("/search.json"),
-                                       resolvingAgainstBaseURL: false)!
-        components.queryItems = [
-            URLQueryItem(name: "q", value: "*"),
-            URLQueryItem(name: "sort", value: "random"),
-            URLQueryItem(name: "limit", value: String(limit)),
-            URLQueryItem(
-                name: "fields",
-                value: "key,title,author_name,first_publish_year,subject,cover_i"
-            )
-        ]
+        let url = baseURL.appendingPathComponent("/trending/daily.json")
+        var request = URLRequest(url: url)
+        request.setValue(
+            "BookExplorer/1.0 (your-email@example.com)",
+            forHTTPHeaderField: "User-Agent"
+        )
         
-        return try await performRequest(components: components)
+        let (data, _) = try await URLSession.shared.data(for: request)
+
+        let trending = try JSONDecoder().decode(TrendingResponse.self, from: data)
+        
+        // Map TrendingBook → OpenLibraryDoc
+        let mapped: [OpenLibraryDoc] = trending.works.map { work in
+            OpenLibraryDoc(
+                key: work.key,
+                title: work.title,
+                author_name: work.authors?.compactMap { $0.name } ?? [],
+                first_publish_year: work.first_publish_year,
+                cover_i: work.cover_i,
+                subject: work.subject ?? []
+            )
+        }
+        
+        // Shuffle and limit
+        return Array(mapped.shuffled().prefix(limit))
     }
     
     /// Search by title, limited to 10 results
