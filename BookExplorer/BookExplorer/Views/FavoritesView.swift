@@ -13,6 +13,25 @@ struct FavoritesView: View {
     private var favorites: [BookItem]
     @State private var path = [BookItem]()
     
+    private var uniqueFavorites: [BookItem] {
+            var seen = Set<String>()
+            var result: [BookItem] = []
+            
+            for book in favorites {
+                // Prefer Open Library key; fall back to title+author combo
+                let key = book.openLibraryKey ??
+                    "\(book.title.lowercased())|\(book.author.lowercased())"
+                
+                if !seen.contains(key) {
+                    seen.insert(key)
+                    result.append(book)
+                }
+            }
+            return result
+        }
+    
+    @Environment(\.modelContext) private var context
+    
     var body: some View {
         NavigationStack(path: $path) {
             ZStack {
@@ -20,7 +39,7 @@ struct FavoritesView: View {
                     .ignoresSafeArea(edges: .all)
                 
                 List {
-                    ForEach(favorites) { item in
+                    ForEach(uniqueFavorites) { item in
                         NavigationLink(value: item) {
                             HStack {
                                 coverView(for: item)
@@ -61,6 +80,9 @@ struct FavoritesView: View {
                 }
             }
         }
+        .task {
+                dedupeBooks()
+            }
     }
     
     @ViewBuilder
@@ -94,6 +116,37 @@ struct FavoritesView: View {
                 .scaledToFill()
         } else {
             Color.gray.opacity(0.2)
+        }
+    }
+    
+    @MainActor
+    private func dedupeBooks() {
+        do {
+            let descriptor = FetchDescriptor<BookItem>()
+            let allBooks = try context.fetch(descriptor)
+            
+            var seen = [String: BookItem]()   // key -> first book we keep
+            
+            for book in allBooks {
+                // Prefer Open Library key, fall back to title+author
+                let key = book.openLibraryKey ??
+                    "\(book.title.lowercased())|\(book.author.lowercased())"
+                
+                if let existing = seen[key] {
+                    // Merge favorite flag so we don't lose favorites
+                    if book.isFavorite && !existing.isFavorite {
+                        existing.isFavorite = true
+                    }
+                    // Delete the duplicate
+                    context.delete(book)
+                } else {
+                    seen[key] = book
+                }
+            }
+            
+            try context.save()
+        } catch {
+            print("❌ Error deduping books:", error)
         }
     }
 }
