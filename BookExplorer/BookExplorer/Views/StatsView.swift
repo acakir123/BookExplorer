@@ -19,30 +19,15 @@ struct StatsView: View {
             GridItem(.flexible(), spacing: 12)
         ]
     
-    // MARK: Placeholder data
-    private let placeholderGenres: [CategoryStat] = [
-        .init(name: "Fantasy",    value: 30, color: Color("Graph1")),
-        .init(name: "Sci-Fi",     value: 25, color: Color("Graph2")),
-        .init(name: "Mystery",    value: 20, color: Color("Graph3")),
-        .init(name: "Non-Fiction",value: 15, color: Color("Graph4")),
-        .init(name: "Romance",    value: 10, color: Color("Graph5"))
-    ]
-    
-    private let placeholderDecades: [CategoryStat] = [
-        .init(name: "1980s", value: 10, color: Color("Graph1")),
-        .init(name: "1990s", value: 18, color: Color("Graph2")),
-        .init(name: "2000s", value: 22, color: Color("Graph3")),
-        .init(name: "2010s", value: 30, color: Color("Graph4")),
-        .init(name: "2020s", value: 20, color: Color("Graph5"))
-    ]
-    
     // MARK: - Derived stats from favorites
     private var favoritesCountText: String {
         "\(favorites.count)"
     }
 
     private var genresCountText: String {
-        let genres = favorites.map { $0.genre ?? "Unknown" }
+        guard !favorites.isEmpty else { return "0" }
+        
+        let genres = favorites.map { primaryGenre(for: $0) }
         return "\(Set(genres).count)"
     }
 
@@ -81,9 +66,18 @@ struct StatsView: View {
     }
 
     private var genreStats: [CategoryStat] {
-        guard !favorites.isEmpty else { return placeholderGenres }
-
         let colorNames = ["Graph1", "Graph2", "Graph3", "Graph4", "Graph5"]
+        
+        // If no favorites, show 5 empty slices named "—" with value 0
+        guard !favorites.isEmpty else {
+            return (0..<5).map { index in
+                CategoryStat(
+                    name: "—",
+                    value: 0,
+                    color: Color(colorNames[index % colorNames.count])
+                )
+            }
+        }
 
         // Group favorites by processed primary genre
         let grouped = Dictionary(grouping: favorites) { book in
@@ -110,19 +104,26 @@ struct StatsView: View {
             )
         }
     }
-
+    
     private var decadeStats: [CategoryStat] {
-        guard !favorites.isEmpty else { return placeholderDecades }
-        
         let colorNames = ["Graph1", "Graph2", "Graph3", "Graph4", "Graph5"]
+        
+        // If no favorites, show 5 empty bars named "—" with value 0
+        guard !favorites.isEmpty else {
+            return (0..<5).map { index in
+                CategoryStat(
+                    name: "—",
+                    value: 0,
+                    color: Color(colorNames[index % colorNames.count])
+                )
+            }
+        }
 
         let grouped = Dictionary(grouping: favorites) { book -> String in
             let yearString = book.yearPublished
-
             guard let year = Int(yearString) else {
                 return "Unknown"
             }
-
             let decadeStart = (year / 10) * 10
             return "\(decadeStart)s"
         }
@@ -137,6 +138,28 @@ struct StatsView: View {
                 )
             }
             .sorted { $0.value > $1.value }
+    }
+    
+    private var genreChartStats: [CategoryStat] {
+        // When no favorites, use the same 5 entries but give them value 1
+        // so the pie chart can draw a ring, while legend still sees 0s.
+        if favorites.isEmpty {
+            return genreStats.map { stat in
+                CategoryStat(name: stat.name, value: 1, color: stat.color)
+            }
+        } else {
+            return genreStats
+        }
+    }
+
+    private var decadeChartStats: [CategoryStat] {
+        if favorites.isEmpty {
+            return decadeStats.map { stat in
+                CategoryStat(name: stat.name, value: 1, color: stat.color)
+            }
+        } else {
+            return decadeStats
+        }
     }
     
     var body: some View {
@@ -165,7 +188,7 @@ struct StatsView: View {
                     .padding(.top, 8)
 
                 HStack(alignment: .center, spacing: 16) {
-                    PieChartView(data: genreStats)
+                    PieChartView(data: genreChartStats)
                         .frame(width: 160, height: 160)
                         .accessibilityLabel("Genre breakdown pie chart")
 
@@ -186,7 +209,10 @@ struct StatsView: View {
                    .font(.title2.weight(.semibold))
                    .padding(.top, 8)
 
-               StackedBarChartView(data: decadeStats)
+                StackedBarChartView(
+                    data: decadeChartStats,
+                    showZeroPercent: favorites.isEmpty
+                )
                    .frame(height: 70)
                    .padding()
                    .background(Color("SecondaryBackground"))

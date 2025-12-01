@@ -11,6 +11,12 @@ struct StackedBarChartView: View {
     let data: [CategoryStat]
     let barHeight: CGFloat = 22
     let cornerRadius: CGFloat = 8
+    let showZeroPercent: Bool
+
+        init(data: [CategoryStat], showZeroPercent: Bool = false) {
+            self.data = data
+            self.showZeroPercent = showZeroPercent
+        }
     
     // Returns the first 5 categories from data
     private var limited: [CategoryStat] {
@@ -49,29 +55,31 @@ struct StackedBarChartView: View {
             
             // MARK: Label Row
             GeometryReader { geo in
-                let width = geo.size.width
-                HStack(spacing: 0) {
-                    ForEach(limited) { item in
-                        // Compute item's proportional width
-                        let w = width * (item.value / total)
-                        VStack(spacing: 2) {
-                            // Category label
-                            Text(item.name)
-                                .font(.caption)
-                                .foregroundStyle(.primary)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                            // Percentage below label
-                            Text(String(format: "%.0f%%", (item.value / total) * 100))
+                    let width = geo.size.width
+                    HStack(spacing: 0) {
+                        ForEach(limited) { item in
+                            let w = width * (item.value / total)
+                            VStack(spacing: 2) {
+                                Text(item.name)
+                                    .font(.caption)
+                                    .foregroundStyle(.primary)
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+
+                                // ⬇️ change this line
+                                Text(
+                                    showZeroPercent
+                                    ? "0%"
+                                    : String(format: "%.0f%%", (item.value / total) * 100)
+                                )
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
+                            }
+                            .frame(width: w, alignment: .center)
                         }
-                        // Each label column takes up the same amount of space as its bar
-                        .frame(width: w, alignment: .center)
                     }
                 }
-            }
-            .frame(height: 28) // label area height
+                .frame(height: 28)
         }
     }
 }
