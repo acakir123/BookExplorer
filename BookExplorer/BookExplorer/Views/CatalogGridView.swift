@@ -22,9 +22,7 @@ struct CatalogGridView: View {
     
     @State private var isLoading = false
     @State private var errorMessage: String?
-    
-    @State private var hasLoadedTrending = false
-    
+        
     private var filteredBooks: [BookItem] {
         let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
@@ -142,8 +140,8 @@ struct CatalogGridView: View {
             }
         }
         .onAppear {
-            if !hasLoadedTrending {
-                hasLoadedTrending = true
+            // Only fetching trending if we currently have no feed books in SwiftData
+            if books.isEmpty {
                 Task {
                     await loadTrending()
                 }
