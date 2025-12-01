@@ -6,9 +6,13 @@
 //
 
 import SwiftUI
+import SwiftData
 
 // MARK: Stats View
 struct StatsView: View {
+    @Query(filter: #Predicate<BookItem> { $0.isFavorite })
+    private var favorites: [BookItem]
+    
     // Columns for the 2x2 card grid
     private let columns = [
             GridItem(.flexible(), spacing: 12),
@@ -32,6 +36,109 @@ struct StatsView: View {
         .init(name: "2020s", value: 20, color: Color("Graph5"))
     ]
     
+    // MARK: - Derived stats from favorites
+    private var favoritesCountText: String {
+        "\(favorites.count)"
+    }
+
+    private var genresCountText: String {
+        let genres = favorites.map { $0.genre ?? "Unknown" }
+        return "\(Set(genres).count)"
+    }
+
+    private var favoriteDecadeText: String {
+        decadeStats.first?.name ?? "—"
+    }
+
+    private var favoriteAuthorText: String {
+        let grouped = Dictionary(grouping: favorites) { $0.author }
+        let top = grouped.max(by: { $0.value.count < $1.value.count })?.key ?? ""
+        return top.isEmpty ? "—" : top
+    }
+    
+    private func primaryGenre(for book: BookItem) -> String {
+        // Split on comma, trim whitespace
+        let parts = book.genre
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+        guard !parts.isEmpty else { return "Unknown" }
+
+        // Take first genre
+        var first = parts[0]
+
+        // If it starts with "series:" (case-insensitive), try the next one
+        if first.lowercased().hasPrefix("series:") {
+            if parts.count > 1 {
+                first = parts[1]
+            } else {
+                return "Unknown"
+            }
+        }
+
+        let cleaned = first.trimmingCharacters(in: .whitespacesAndNewlines)
+        return cleaned.isEmpty ? "Unknown" : cleaned
+    }
+
+    private var genreStats: [CategoryStat] {
+        guard !favorites.isEmpty else { return placeholderGenres }
+
+        let colorNames = ["Graph1", "Graph2", "Graph3", "Graph4", "Graph5"]
+
+        // Group favorites by processed primary genre
+        let grouped = Dictionary(grouping: favorites) { book in
+            primaryGenre(for: book)
+        }
+
+        // Turn into stats, sort by count, keep top 5, then apply colors
+        let sorted = grouped
+            .map { (name, books) in
+                CategoryStat(
+                    name: name,
+                    value: Double(books.count),
+                    color: .clear   // temporary, will set below
+                )
+            }
+            .sorted { $0.value > $1.value }
+            .prefix(5)
+
+        return sorted.enumerated().map { index, stat in
+            CategoryStat(
+                name: stat.name,
+                value: stat.value,
+                color: Color(colorNames[index % colorNames.count])
+            )
+        }
+    }
+
+    private var decadeStats: [CategoryStat] {
+        guard !favorites.isEmpty else { return placeholderDecades }
+        
+        let colorNames = ["Graph1", "Graph2", "Graph3", "Graph4", "Graph5"]
+
+        let grouped = Dictionary(grouping: favorites) { book -> String in
+            let yearString = book.yearPublished
+
+            guard let year = Int(yearString) else {
+                return "Unknown"
+            }
+
+            let decadeStart = (year / 10) * 10
+            return "\(decadeStart)s"
+        }
+
+        return grouped
+            .enumerated()
+            .map { index, entry in
+                CategoryStat(
+                    name: entry.key,
+                    value: Double(entry.value.count),
+                    color: Color(colorNames[index % colorNames.count])
+                )
+            }
+            .sorted { $0.value > $1.value }
+    }
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -46,10 +153,10 @@ struct StatsView: View {
                 
                 // MARK: 2x2 Grid of Stat Cards
                 LazyVGrid(columns: columns, spacing: 12) {
-                    StatCard(title: "# Favorites", text: "45")
-                    StatCard(title: "# Genres", text: "12")
-                    StatCard(title: "Favorite Decade", text: "2010s")
-                    StatCard(title: "Favorite Author", text: "JK Rowling")
+                    StatCard(title: "# Favorites", text: favoritesCountText)
+                    StatCard(title: "# Genres", text: genresCountText)
+                    StatCard(title: "Favorite Decade", text: favoriteDecadeText)
+                    StatCard(title: "Favorite Author", text: favoriteAuthorText)
                 }
                 
                 // MARK: Genre Breakdown
@@ -58,38 +165,32 @@ struct StatsView: View {
                     .padding(.top, 8)
 
                 HStack(alignment: .center, spacing: 16) {
-                    // Pie chart
-                    PieChartView(data: placeholderGenres)
+                    PieChartView(data: genreStats)
                         .frame(width: 160, height: 160)
                         .accessibilityLabel("Genre breakdown pie chart")
 
-                    // Chart legend
                     VStack(alignment: .leading, spacing: 10) {
-                        ForEach(placeholderGenres) { stat in
+                        ForEach(genreStats) { stat in
                             LegendRow(
                                 color: stat.color,
                                 text: stat.name,
-                                percent: stat.percentString(in: placeholderGenres)
+                                percent: stat.percentString(in: genreStats)
                             )
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding()
-                .background(Color("SecondaryBackground"))
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 
                 // MARK: Decade breakdown
                 Text("Decade Breakdown")
-                    .font(.title2.weight(.semibold))
-                    .padding(.top, 8)
+                   .font(.title2.weight(.semibold))
+                   .padding(.top, 8)
 
-                // Stacked bar chart
-                StackedBarChartView(data: placeholderDecades)
-                    .frame(height: 70) // bar + labels total height
-                    .padding()
-                    .background(Color("SecondaryBackground"))
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+               StackedBarChartView(data: decadeStats)
+                   .frame(height: 70)
+                   .padding()
+                   .background(Color("SecondaryBackground"))
+                   .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .padding(16)
         }
