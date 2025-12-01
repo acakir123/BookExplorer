@@ -36,9 +36,31 @@ struct StatsView: View {
     }
 
     private var favoriteAuthorText: String {
-        let grouped = Dictionary(grouping: favorites) { $0.author }
-        let top = grouped.max(by: { $0.value.count < $1.value.count })?.key ?? ""
-        return top.isEmpty ? "—" : top
+        // Filter out placeholder values
+        let validFavorites = favorites.filter {
+            let a = $0.author.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            return !a.isEmpty && a != "unknown author" && a != "unknown"
+        }
+
+        guard !validFavorites.isEmpty else { return "—" }
+
+        // Group by author
+        let grouped = Dictionary(grouping: validFavorites) { $0.author }
+
+        // Turn into (author, count), then sort:
+        // 1) higher count first
+        // 2) for ties, alphabetical by author
+        let best = grouped
+            .map { (author: $0.key, count: $0.value.count) }
+            .sorted { lhs, rhs in
+                if lhs.count != rhs.count {
+                    return lhs.count > rhs.count
+                }
+                return lhs.author < rhs.author
+            }
+            .first
+
+        return best?.author ?? "—"
     }
     
     private func primaryGenre(for book: BookItem) -> String {
@@ -84,7 +106,7 @@ struct StatsView: View {
             primaryGenre(for: book)
         }
 
-        // Turn into stats, sort by count, keep top 5, then apply colors
+        // Turn into stats, sort by count (desc), then name (asc), keep top 5
         let sorted = grouped
             .map { (name, books) in
                 CategoryStat(
@@ -93,7 +115,12 @@ struct StatsView: View {
                     color: .clear   // temporary, will set below
                 )
             }
-            .sorted { $0.value > $1.value }
+            .sorted { lhs, rhs in
+                if lhs.value != rhs.value {
+                    return lhs.value > rhs.value
+                }
+                return lhs.name < rhs.name
+            }
             .prefix(5)
 
         return sorted.enumerated().map { index, stat in
@@ -128,16 +155,23 @@ struct StatsView: View {
             return "\(decadeStart)s"
         }
 
-        return grouped
-            .enumerated()
-            .map { index, entry in
-                CategoryStat(
-                    name: entry.key,
-                    value: Double(entry.value.count),
-                    color: Color(colorNames[index % colorNames.count])
-                )
+        let unsorted = grouped
+            .map { (name: $0.key, count: $0.value.count) }
+
+        let sorted = unsorted.sorted { lhs, rhs in
+            if lhs.count != rhs.count {
+                return lhs.count > rhs.count
             }
-            .sorted { $0.value > $1.value }
+            return lhs.name < rhs.name
+        }
+
+        return sorted.enumerated().map { index, entry in
+            CategoryStat(
+                name: entry.name,
+                value: Double(entry.count),
+                color: Color(colorNames[index % colorNames.count])
+            )
+        }
     }
     
     private var genreChartStats: [CategoryStat] {
