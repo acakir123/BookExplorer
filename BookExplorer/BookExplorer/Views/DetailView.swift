@@ -145,24 +145,57 @@ struct DetailView: View {
         }
     }
     
+    private func cleanedGenreQuery(from raw: String) -> String? {
+        // Split on commas and trim whitespace
+        let parts = raw
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+        // First non-empty piece
+        guard var first = parts.first, !first.isEmpty else {
+            return nil
+        }
+
+        // If it starts with "series:", try the next piece instead
+        if first.lowercased().hasPrefix("series:") {
+            if let next = parts.dropFirst().first {
+                first = next
+            } else {
+                return nil
+            }
+        }
+
+        let cleaned = first.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lower = cleaned.lowercased()
+
+        // Ignore placeholder genres
+        if cleaned.isEmpty || lower.hasPrefix("unknown") {
+            return nil
+        }
+
+        return cleaned
+    }
+    
     // MARK: - Search Similar
     
     private func searchSimilarAndDismiss() async {
+        // Build a good genre query if possible; otherwise fall back to title only
+        let genreQuery = cleanedGenreQuery(from: book.genre)
+
         do {
             let docs = try await OpenLibraryAPI.shared.searchSimilarBooks(
                 title: book.title,
-                genre: book.genre,
+                genre: genreQuery,   // ⬅️ cleaned or nil
                 limit: 10
             )
             try await syncBooksFromOpenLibrary(docs, in: modelContext)
         } catch {
-            // handle error
+            // TODO: optionally show an error toast, etc.
+            print("Error searching similar books:", error)
         }
 
         await MainActor.run {
-            // Switch tab
             tabSelection.selectedTab = .catalog
-            // Dismiss detail view
             dismiss()
         }
     }
