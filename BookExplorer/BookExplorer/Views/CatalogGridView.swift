@@ -17,24 +17,16 @@ struct CatalogGridView: View {
     
     @State private var path = [BookItem]()
     
-    // State variable for searching books
-    @State private var searchText = ""
+    // Environment object for searching books
+    @EnvironmentObject var catalogSearchState: CatalogSearchState
     
     @State private var isLoading = false
     @State private var errorMessage: String?
     
-    @State private var hasLoadedTrending = false
-    
+    @State private var isRefreshing = false
+        
     private var filteredBooks: [BookItem] {
-        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            return books
-        }
-        return books.filter {
-            $0.title.localizedCaseInsensitiveContains(trimmed) ||
-            $0.author.localizedCaseInsensitiveContains(trimmed) ||
-            $0.genre.localizedCaseInsensitiveContains(trimmed)
-        }
+        books
     }
     
     let layout = [
@@ -140,17 +132,32 @@ struct CatalogGridView: View {
                     }
                 }
             }
-        }
-        .onAppear {
-            if !hasLoadedTrending {
-                hasLoadedTrending = true
-                Task {
-                    await loadTrending()
+            
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        Task {
+                            isRefreshing = true
+                            catalogSearchState.searchText = ""
+                            await loadTrending()
+                            isRefreshing = false
+                        }
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundStyle(Color("PrimaryBlue"))
+                            .fontWeight(.medium)
+                    }
+                    .accessibilityLabel("Refresh Trending Books")
                 }
             }
         }
+        .onAppear {
+            if books.isEmpty && catalogSearchState.searchText.isEmpty {
+                Task { await loadTrending() }
+            }
+        }
         .searchable(
-            text: $searchText,
+            text: $catalogSearchState.searchText,
             placement: .navigationBarDrawer(displayMode: .always),
             prompt: "Search Books"
         )
@@ -159,7 +166,9 @@ struct CatalogGridView: View {
                 await performSearch()
             }
         }
-        .onChange(of: searchText) { newValue in
+        .onChange(of: catalogSearchState.searchText) { newValue in
+            guard !isRefreshing else { return }
+            
             let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
             if trimmed.isEmpty {
                 // When the user clears the search, go back to trending
@@ -216,7 +225,7 @@ struct CatalogGridView: View {
     }
     
     private func performSearch() async {
-        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = catalogSearchState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             await loadTrending()
             return
@@ -252,6 +261,7 @@ struct CatalogGridView: View {
 
 #Preview {
     CatalogGridView()
+        .environmentObject(CatalogSearchState())
         .modelContainer(BookItem.preview)
 }
 

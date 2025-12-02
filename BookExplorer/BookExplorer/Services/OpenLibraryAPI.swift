@@ -109,7 +109,14 @@ final class OpenLibraryAPI {
         let (data, _) = try await URLSession.shared.data(for: request)
         let response = try JSONDecoder().decode(TrendingResponse.self, from: data)
 
-        var docs = Array(response.works.prefix(limit))
+        // Trying to get unique books
+        let uniqueByKey: [OpenLibraryDoc] = Array(
+            Dictionary(grouping: response.works, by: { $0.key })
+                .values
+                .compactMap { $0.first }
+        )
+
+        var docs = Array(uniqueByKey.shuffled().prefix(limit))
 
         for i in docs.indices { // populating subject here
             if let subjects = try? await fetchSubjects(for: docs[i].key),
