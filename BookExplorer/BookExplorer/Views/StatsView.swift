@@ -63,6 +63,7 @@ struct StatsView: View {
         return best?.author ?? "—"
     }
     
+    // extract a primary genre from a book list of genres
     private func primaryGenre(for book: BookItem) -> String {
         // Split on comma, trim whitespace
         let parts = book.genre
@@ -87,6 +88,7 @@ struct StatsView: View {
         return cleaned.isEmpty ? "Unknown" : cleaned
     }
 
+    // MARK: genre statistics
     private var genreStats: [CategoryStat] {
         let colorNames = ["Graph1", "Graph2", "Graph3", "Graph4", "Graph5"]
         
@@ -132,6 +134,7 @@ struct StatsView: View {
         }
     }
     
+    // MARK: decades statistics
     private var decadeStats: [CategoryStat] {
         let colorNames = ["Graph1", "Graph2", "Graph3", "Graph4", "Graph5"]
         
@@ -146,6 +149,7 @@ struct StatsView: View {
             }
         }
 
+        // Group favorites into decades so 2012 is 2010s
         let grouped = Dictionary(grouping: favorites) { book -> String in
             let yearString = book.yearPublished
             guard let year = Int(yearString) else {
@@ -158,6 +162,7 @@ struct StatsView: View {
         let unsorted = grouped
             .map { (name: $0.key, count: $0.value.count) }
 
+        // sort by count descending and then by label ascending
         let sorted = unsorted.sorted { lhs, rhs in
             if lhs.count != rhs.count {
                 return lhs.count > rhs.count
@@ -186,6 +191,8 @@ struct StatsView: View {
         }
     }
 
+    // When no favorites, use the same 5 entries but give them value 1
+    // so the bar chart can draw bars , while legend still sees 0s.
     private var decadeChartStats: [CategoryStat] {
         if favorites.isEmpty {
             return decadeStats.map { stat in

@@ -12,6 +12,7 @@ struct DetailView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) private var modelContext
     
+    // Used to switch back to catalog tab after search similar
     @EnvironmentObject var tabSelection: TabSelection
     
     @Bindable var book: BookItem
@@ -83,6 +84,7 @@ struct DetailView: View {
                 }
                 .navigationBarBackButtonHidden(true)
                 .toolbar {
+                    // Custom back button
                     ToolbarItem(placement: .topBarLeading) {
                         Button {
                             dismiss()
@@ -94,6 +96,7 @@ struct DetailView: View {
                         }
                     }
                     
+                    // Favorite button
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
                             book.isFavorite.toggle()
@@ -111,6 +114,7 @@ struct DetailView: View {
     
     // MARK: - Cover
     
+    // Picks remote cover (if available)
     @ViewBuilder
     private var coverView: some View {
         if let urlString = book.coverURL,
@@ -134,6 +138,7 @@ struct DetailView: View {
         }
     }
     
+    // Falls back to local asset or gray box if no cover
     @ViewBuilder
     private var fallbackCover: some View {
         if !book.coverImage.isEmpty {
@@ -145,6 +150,7 @@ struct DetailView: View {
         }
     }
     
+    // Cleans the raw genre string into something usable for a "similar books" query.
     private func cleanedGenreQuery(from raw: String) -> String? {
         // Split on commas and trim whitespace
         let parts = raw
@@ -185,12 +191,11 @@ struct DetailView: View {
         do {
             let docs = try await OpenLibraryAPI.shared.searchSimilarBooks(
                 title: book.title,
-                genre: genreQuery,   // ⬅️ cleaned or nil
+                genre: genreQuery,   // cleaned or nil
                 limit: 10
             )
             try await syncBooksFromOpenLibrary(docs, in: modelContext)
         } catch {
-            // TODO: optionally show an error toast, etc.
             print("Error searching similar books:", error)
         }
 

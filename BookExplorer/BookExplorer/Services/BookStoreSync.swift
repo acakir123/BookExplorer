@@ -9,21 +9,25 @@ import Foundation
 import SwiftData
 
 /// Applies a set of Open Library docs to the SwiftData store
-/// - Keeps favorites (isFavorite == true) intact
+/// - Keeps favorites (isFavorite == true) intact, so favorites survive new API loads.
+/// - Uses openLibraryKey (the work key) to find matches.
+/// - Updates existing books in-place if a matching key is found.
 /// - Marks all existing books as not in current catalog feed
-/// - Upserts docs & marks them as in the current feed
+/// - Inserts new BookItems when no existing match is found.
 @MainActor
 func syncBooksFromOpenLibrary(_ docs: [OpenLibraryDoc],
                               in context: ModelContext) throws {
+    // fetch all existing BookItem objects from the store
     let fetchDescriptor = FetchDescriptor<BookItem>()
     let existing = try context.fetch(fetchDescriptor)
     
-    // First mark all books as not in the current catalog feed
+    // 1, Mark all books as not in the current catalog feed
+    // (treats the incoming docs as the new "current feed".)
     for book in existing {
         book.inCatalogFeed = false
     }
     
-    // For fast lookup by Open Library key
+    // 2, Create fast lookup table for existing books by Open Library key
     var existingByKey: [String: BookItem] = [:]
     for book in existing {
         if let key = book.openLibraryKey {
@@ -31,7 +35,8 @@ func syncBooksFromOpenLibrary(_ docs: [OpenLibraryDoc],
         }
     }
     
-    // Upsert API docs
+    // 3. Upsert API docs:
+    // (If a matching key already exists update fields, otherwise create a new BookItem)
     for (index, doc) in docs.enumerated() {
         let key = doc.key
         
@@ -45,7 +50,7 @@ func syncBooksFromOpenLibrary(_ docs: [OpenLibraryDoc],
             existingBook.coverURL = doc.coverURLString
             existingBook.inCatalogFeed = true
         } else {
-            // New book from API
+            // Insert a new book for this API doc
             let newBook = BookItem(
                 id: index, // local numeric id; not the OL key
                 title: doc.title ?? "Unknown Title",
@@ -63,5 +68,6 @@ func syncBooksFromOpenLibrary(_ docs: [OpenLibraryDoc],
         }
     }
     
+    // Persist all changes to store
     try context.save()
 }

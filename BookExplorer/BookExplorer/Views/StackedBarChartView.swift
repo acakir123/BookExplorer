@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+
 struct StackedBarChartView: View {
     let data: [CategoryStat]
     let barHeight: CGFloat = 22
@@ -33,6 +34,7 @@ struct StackedBarChartView: View {
         max(limited.map(\.value).max() ?? 0, 0.0001) // avoid /0
     }
     
+    // Color palette for the bars (separate from the pie colors)
     private let barColors: [Color] = [
         Color(red: 0.24, green: 0.58, blue: 0.98), // blue
         Color(red: 0.99, green: 0.66, blue: 0.26), // orange
@@ -44,19 +46,21 @@ struct StackedBarChartView: View {
     var body: some View {
         GeometryReader { geo in
             let totalHeight = geo.size.height
-            let barAreaHeight = totalHeight * 0.72     // top 60% for bars
-            let labelAreaHeight = totalHeight * 0.28   // bottom 40% for labels
+            let barAreaHeight = totalHeight * 0.72     // top 72% for bars
+            let labelAreaHeight = totalHeight * 0.28   // bottom 28% for labels
             let barWidth = max(geo.size.width / CGFloat(max(limited.count, 1)) - 8, 0)
 
             VStack(spacing: 4) {
                 // MARK: Bars
                 HStack(alignment: .bottom, spacing: 8) {
                     ForEach(Array(limited.enumerated()), id: \.1.id) { index, item in
+                        // Normalize each value to [0,1]
                         let normalized = item.value / maxValue
+                        // Scale bar height with bar area
                         let barHeight = barAreaHeight * CGFloat(normalized) * 0.9
 
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(barColors[index % barColors.count])   // ✅ index is an Int
+                            .fill(barColors[index % barColors.count])
                             .frame(width: barWidth, height: barHeight)
                             .overlay(
                                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)

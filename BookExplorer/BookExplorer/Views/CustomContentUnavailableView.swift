@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+// Used for empty favorite screen
 struct CustomContentUnavailableView: View {
     var icon: String
     var title: String

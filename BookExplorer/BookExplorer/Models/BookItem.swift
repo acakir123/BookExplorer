@@ -9,18 +9,19 @@ import Foundation
 import SwiftUI
 import SwiftData
 
+// Model for a single book's data
 @Model
-final class BookItem { // Class to hold our book data
+final class BookItem {
     var id: Int
     var title: String
     var author: String
     var details: String
     var genre: String
     var yearPublished: String
-    var coverImage: String     // still used for local assets / previews
+    var coverImage: String     // Still used for local assets / previews
     var isFavorite: Bool = false
     
-    // NEW: Open Library fields
+    // MARK: Open Library fields
     var openLibraryKey: String?   // e.g. "/works/OL27448W"
     var coverURL: String?         // remote cover URL
     var inCatalogFeed: Bool       // is in current catalog (trending/search/similar)
@@ -52,13 +53,15 @@ final class BookItem { // Class to hold our book data
     }
 }
 
-extension BookItem { // Extension to help with previews
+// Extension to help with previews
+extension BookItem {
     @MainActor
     
     static var preview: ModelContainer {
         let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try! ModelContainer(for: BookItem.self, configurations: configuration)
         
+        // Sample Books for previews only
         container.mainContext.insert(BookItem(
                     id: 1,
                     title: "To Kill a Mockingbird",

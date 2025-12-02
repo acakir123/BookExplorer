@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+// Used for custom tab bar
 class TabSelection: ObservableObject {
     @Published var selectedTab: AppTab = .catalog
 }

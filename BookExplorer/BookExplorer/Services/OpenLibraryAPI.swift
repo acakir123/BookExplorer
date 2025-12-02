@@ -9,10 +9,12 @@ import Foundation
 
 // MARK: - API Models
 
+// Top-level search response from /search.json
 struct OpenLibrarySearchResponse: Decodable {
     let docs: [OpenLibraryDoc]
 }
 
+// Document model used for search and trending
 struct OpenLibraryDoc: Decodable {
     let key: String                      // Work key, e.g. "/works/OL27448W"
     let title: String?
@@ -22,13 +24,17 @@ struct OpenLibraryDoc: Decodable {
     var subject: [String]?
 }
 
+// Response from /trending/daily.json
 struct TrendingResponse: Decodable {
     let works: [OpenLibraryDoc]
 }
 
+// Detail payload for a work, e.g. /works/OL… .json
 struct WorkDetail: Decodable {
     let subjects: [String]?
 }
+
+// MARK: - OpenLibraryDoc helpers
 
 extension OpenLibraryDoc {
     /// Large cover URL using Open Library covers API
@@ -80,7 +86,9 @@ final class OpenLibraryAPI {
         self.session = session
     }
     
-    private func fetchSubjects(for workKey: String) async throws -> [String] { // To get subjects for trending books
+    // Get subjects for trending books
+    private func fetchSubjects(for workKey: String) async throws -> [String] {
+        // Remove leading / if present
         let cleanKey = workKey.hasPrefix("/") ? String(workKey.dropFirst()) : workKey
         let url = baseURL.appendingPathComponent("\(cleanKey).json")
 
@@ -92,6 +100,7 @@ final class OpenLibraryAPI {
 
         let (data, _) = try await URLSession.shared.data(for: request)
         let detail = try JSONDecoder().decode(WorkDetail.self, from: data)
+        
         // If the API doesn’t provide subjects, just return an empty array
         return detail.subjects ?? []
     }
@@ -109,16 +118,18 @@ final class OpenLibraryAPI {
         let (data, _) = try await URLSession.shared.data(for: request)
         let response = try JSONDecoder().decode(TrendingResponse.self, from: data)
 
-        // Trying to get unique books
+        // Deduplicate by work key to get unique books
         let uniqueByKey: [OpenLibraryDoc] = Array(
             Dictionary(grouping: response.works, by: { $0.key })
                 .values
                 .compactMap { $0.first }
         )
 
+        // Randomized subset
         var docs = Array(uniqueByKey.shuffled().prefix(limit))
 
-        for i in docs.indices { // populating subject here
+        // Enrich with subjects from full work details
+        for i in docs.indices {
             if let subjects = try? await fetchSubjects(for: docs[i].key),
                !subjects.isEmpty {
                 docs[i].subject = subjects
@@ -166,15 +177,16 @@ final class OpenLibraryAPI {
     
     // MARK: - Internal
     
+    // Shared request/decoding helper for search-like endpoints.
     private func performRequest(components: URLComponents) async throws -> [OpenLibraryDoc] {
         guard let url = components.url else {
             throw URLError(.badURL)
         }
         
         var request = URLRequest(url: url)
-        // Good practice per Open Library docs: identify your app & contact
+        // Good practice per Open Library docs: identify app & contact
         request.setValue(
-            "BookExplorer/1.0 (your-email@example.com)",
+            "BookExplorer/1.0 (kisituaaron@gmail.com)",
             forHTTPHeaderField: "User-Agent"
         )
         

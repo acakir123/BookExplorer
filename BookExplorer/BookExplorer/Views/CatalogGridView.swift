@@ -12,6 +12,7 @@ struct CatalogGridView: View {
     @Environment(\.modelContext) private var modelContext
     
     // Only show books that belong to the current catalog feed
+    // Sorted determinist quickly by title so that grid layout is stable
     @Query(
         filter: #Predicate<BookItem> { $0.inCatalogFeed },
         sort: [SortDescriptor(\BookItem.title)]
@@ -20,7 +21,7 @@ struct CatalogGridView: View {
     
     @State private var path = [BookItem]()
     
-    // Environment object for searching books
+    // Shared search state across the catalog tab
     @EnvironmentObject var catalogSearchState: CatalogSearchState
     
     @State private var isLoading = false
@@ -28,29 +29,30 @@ struct CatalogGridView: View {
     
     @State private var isRefreshing = false
     
+    // Forces the ScrollView to recreate, resetting its scroll position.
     @State private var scrollResetID = UUID()
         
     private var filteredBooks: [BookItem] {
         books
     }
     
-    // ⬇️ Add this
-        private var uniqueBooks: [BookItem] {
-            var seen = Set<String>()
-            var result: [BookItem] = []
+    // Deduplicated list of books for display.
+    private var uniqueBooks: [BookItem] {
+        var seen = Set<String>()
+        var result: [BookItem] = []
 
-            for book in filteredBooks {
-                // Prefer Open Library key, fall back to title+author
-                let key = book.openLibraryKey ??
-                    "\(book.title.lowercased())|\(book.author.lowercased())"
+        for book in filteredBooks {
+            // Prefer Open Library key, fall back to title+author
+            let key = book.openLibraryKey ??
+                "\(book.title.lowercased())|\(book.author.lowercased())"
 
-                if !seen.contains(key) {
-                    seen.insert(key)
-                    result.append(book)
-                }
+            if !seen.contains(key) {
+                seen.insert(key)
+                result.append(book)
             }
-            return result
         }
+        return result
+    }
     
     let layout = [
         GridItem(.flexible(minimum: 120)),
@@ -127,6 +129,7 @@ struct CatalogGridView: View {
                     }
                     .padding(.horizontal)
                 }
+                // Force ScrollView to recreate when scrollResetID changes
                 .id(scrollResetID)
                 // Extra scroll space so bottom cards are visible above tab bar
                 .safeAreaInset(edge: .bottom) {
@@ -158,14 +161,15 @@ struct CatalogGridView: View {
             }
             
             .toolbar {
+                // Refresh trending button in the top-right
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        // ⬇️ reset scroll position
+                        // Reset scroll position to the top by changing the view ID
                         scrollResetID = UUID()
                         
                         Task {
                             isRefreshing = true
-                            catalogSearchState.searchText = ""
+                            catalogSearchState.searchText = "" // Clear search when refreshing
                             await loadTrending()
                             isRefreshing = false
                         }
@@ -178,11 +182,13 @@ struct CatalogGridView: View {
                 }
             }
         }
+        // On first appearance there is no search text and no books so load initial trending items.
         .onAppear {
             if books.isEmpty && catalogSearchState.searchText.isEmpty {
                 Task { await loadTrending() }
             }
         }
+        // Search bar in the navigation bar
         .searchable(
             text: $catalogSearchState.searchText,
             placement: .navigationBarDrawer(displayMode: .always),
@@ -194,6 +200,7 @@ struct CatalogGridView: View {
             }
         }
         .onChange(of: catalogSearchState.searchText) { newValue in
+            // Ignore onChange during explicit refresh
             guard !isRefreshing else { return }
             
             let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -208,6 +215,7 @@ struct CatalogGridView: View {
     
     // MARK: - Cover View
     
+    // Renders the book cover: remote image if URL present, otherwise fallback
     @ViewBuilder
     private func bookCoverView(for book: BookItem) -> some View {
         if let urlString = book.coverURL,
@@ -245,12 +253,15 @@ struct CatalogGridView: View {
     
     // MARK: - Networking
     
+    // Loads "trending" books using the OpenLibraryAPI and syncs them into SwiftData
     private func loadTrending() async {
         await loadBooks { api in
             try await api.fetchTrending(limit: 10)
         }
     }
     
+    // Performs a search based on the current search text
+    // If the search text is empty, falls back to trending
     private func performSearch() async {
         let trimmed = catalogSearchState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
@@ -263,6 +274,11 @@ struct CatalogGridView: View {
         }
     }
     
+    // Shared loader that:
+    /// - sets loading state
+    /// - runs the API call
+    /// - writes results into SwiftData via syncBooksFromOpenLibrary
+    /// - clears loading state or sets error message on failure
     private func loadBooks(
         _ block: (OpenLibraryAPI) async throws -> [OpenLibraryDoc]
     ) async {

@@ -7,7 +7,7 @@
 
 import Foundation
 
-// Different tabs
+// Different tabs for custom tab bar
 enum AppTab: Hashable {
     case catalog
     case favorites

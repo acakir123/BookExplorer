@@ -9,10 +9,12 @@ import SwiftUI
 import SwiftData
 
 struct FavoritesView: View {
+    // favorite books
     @Query(filter: #Predicate<BookItem> { $0.isFavorite })
     private var favorites: [BookItem]
     @State private var path = [BookItem]()
     
+    // remove duplicate books from favorites for display
     private var uniqueFavorites: [BookItem] {
             var seen = Set<String>()
             var result: [BookItem] = []
@@ -80,11 +82,13 @@ struct FavoritesView: View {
                 }
             }
         }
+        // run deduplication once the view appears
         .task {
                 dedupeBooks()
             }
     }
     
+    // MARK: cover view
     @ViewBuilder
     private func coverView(for item: BookItem) -> some View {
         if let urlString = item.coverURL,
@@ -108,6 +112,7 @@ struct FavoritesView: View {
         }
     }
     
+    // Fallback cover when remote image is missing
     @ViewBuilder
     private func fallbackCover(for item: BookItem) -> some View {
         if !item.coverImage.isEmpty {
@@ -119,13 +124,15 @@ struct FavoritesView: View {
         }
     }
     
+    // MARK: remove duplication
+    
     @MainActor
     private func dedupeBooks() {
         do {
             let descriptor = FetchDescriptor<BookItem>()
             let allBooks = try context.fetch(descriptor)
             
-            var seen = [String: BookItem]()   // key -> first book we keep
+            var seen = [String: BookItem]()   // key (first book we keep)
             
             for book in allBooks {
                 // Prefer Open Library key, fall back to title+author
@@ -146,13 +153,12 @@ struct FavoritesView: View {
             
             try context.save()
         } catch {
-            print("❌ Error deduping books:", error)
+            print("Error deduping books:", error)
         }
     }
 }
 
-// ... keep your favoritesPreview extension + preview the same
-
+// MARK: - preview
 
 extension BookItem {
     @MainActor

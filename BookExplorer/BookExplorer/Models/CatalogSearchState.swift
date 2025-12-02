@@ -7,13 +7,15 @@
 
 import SwiftUI
 
+// Shared search date for the catalog tab
 final class CatalogSearchState: ObservableObject {
 
     @AppStorage("catalogSearchText") private var storedSearchText: String = ""
 
+    // whenever these search text changes, update the persistent storage
     @Published var searchText: String {
         didSet {
-            storedSearchText = searchText        // keep it persisted
+            storedSearchText = searchText
         }
     }
 
