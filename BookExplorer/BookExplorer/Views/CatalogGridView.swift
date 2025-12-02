@@ -12,7 +12,10 @@ struct CatalogGridView: View {
     @Environment(\.modelContext) private var modelContext
     
     // Only show books that belong to the current catalog feed
-    @Query(filter: #Predicate<BookItem> { $0.inCatalogFeed })
+    @Query(
+        filter: #Predicate<BookItem> { $0.inCatalogFeed },
+        sort: [SortDescriptor(\BookItem.title)]
+    )
     private var books: [BookItem]
     
     @State private var path = [BookItem]()
@@ -31,6 +34,24 @@ struct CatalogGridView: View {
         books
     }
     
+    // ⬇️ Add this
+        private var uniqueBooks: [BookItem] {
+            var seen = Set<String>()
+            var result: [BookItem] = []
+
+            for book in filteredBooks {
+                // Prefer Open Library key, fall back to title+author
+                let key = book.openLibraryKey ??
+                    "\(book.title.lowercased())|\(book.author.lowercased())"
+
+                if !seen.contains(key) {
+                    seen.insert(key)
+                    result.append(book)
+                }
+            }
+            return result
+        }
+    
     let layout = [
         GridItem(.flexible(minimum: 120)),
         GridItem(.flexible(minimum: 120))
@@ -44,7 +65,7 @@ struct CatalogGridView: View {
                 
                 ScrollView {
                     LazyVGrid(columns: layout) {
-                        ForEach(filteredBooks) { book in
+                        ForEach(uniqueBooks) { book in
                             NavigationLink(value: book) {
                                 VStack(alignment: .leading) {
                                     
