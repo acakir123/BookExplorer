@@ -52,7 +52,7 @@ func syncBooksFromOpenLibrary(_ docs: [OpenLibraryDoc],
         } else {
             // Insert a new book for this API doc
             let newBook = BookItem(
-                id: index, // local numeric id; not the OL key
+                id: doc.key.hashValue,
                 title: doc.title ?? "Unknown Title",
                 author: doc.mainAuthor,
                 details: doc.descriptionText,

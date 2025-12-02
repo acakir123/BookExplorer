@@ -117,16 +117,34 @@ final class OpenLibraryAPI {
 
         let (data, _) = try await URLSession.shared.data(for: request)
         let response = try JSONDecoder().decode(TrendingResponse.self, from: data)
+        
+        let works = response.works
 
-        // Deduplicate by work key to get unique books
-        let uniqueByKey: [OpenLibraryDoc] = Array(
-            Dictionary(grouping: response.works, by: { $0.key })
-                .values
-                .compactMap { $0.first }
+        
+        // First we remove raw duplicates based on their keys
+        let uniqueByKey = Array(
+            Dictionary(grouping: works, by: { $0.key })
+                .compactMap { $0.value.first }
         )
 
-        // Randomized subset
-        var docs = Array(uniqueByKey.shuffled().prefix(limit))
+        // Then remove duplicates if books share the same title, author, year, and cover
+        let uniqueCleaned = Array(
+            Dictionary(
+                grouping: uniqueByKey,
+                by: { doc in
+                    let title = doc.title?.lowercased() ?? ""
+                    let author = doc.author_name?.first?.lowercased() ?? ""
+                    let year = doc.first_publish_year ?? -1
+                    let cover = doc.cover_i ?? -1
+
+                    // Dedupe by visible identity
+                    return "\(title)|\(author)|\(year)|\(cover)"
+                }
+            )
+            .compactMap { $0.value.first }
+        )
+
+        var docs = Array(uniqueCleaned.shuffled().prefix(limit))
 
         // Enrich with subjects from full work details
         for i in docs.indices {
