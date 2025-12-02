@@ -24,6 +24,8 @@ struct CatalogGridView: View {
     @State private var errorMessage: String?
     
     @State private var isRefreshing = false
+    
+    @State private var scrollResetID = UUID()
         
     private var filteredBooks: [BookItem] {
         books
@@ -104,6 +106,7 @@ struct CatalogGridView: View {
                     }
                     .padding(.horizontal)
                 }
+                .id(scrollResetID)
                 // Extra scroll space so bottom cards are visible above tab bar
                 .safeAreaInset(edge: .bottom) {
                     Color.clear.frame(height: 92) // tab bar height + a little extra
@@ -136,6 +139,9 @@ struct CatalogGridView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
+                        // ⬇️ reset scroll position
+                        scrollResetID = UUID()
+                        
                         Task {
                             isRefreshing = true
                             catalogSearchState.searchText = ""
